@@ -364,3 +364,26 @@ html[data-style="minimal"] h1 svg {
   background-size: 50% 100%;
   animation: shimmer 1s linear infinite;
 }
+
+/* Dual-thumb price slider: only the thumbs take pointer events */
+.range-thumb::-webkit-slider-thumb {
+  pointer-events: auto;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 9999px;
+  background: var(--background);
+  border: 2px solid var(--primary);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.15);
+  cursor: grab;
+}
+.range-thumb::-moz-range-thumb {
+  pointer-events: auto;
+  width: 20px;
+  height: 20px;
+  border-radius: 9999px;
+  background: var(--background);
+  border: 2px solid var(--primary);
+  cursor: grab;
+}
+.range-thumb::-moz-range-track { background: transparent; }

@@ -4,8 +4,7 @@ import { getStoreCategories } from "@/lib/categories";
 import { getSettings } from "@/lib/settings";
 import { Reveal } from "@/components/motion/reveal";
 import { ProductGridSkeleton } from "@/components/product/product-skeleton";
-import { ShopGrid } from "./shop-grid";
-import { ShopFilters } from "./shop-filters";
+import { ShopBrowser } from "./shop-browser";
 
 export const metadata = { title: "Shop all" };
 export const dynamic = "force-dynamic";
@@ -13,9 +12,9 @@ export const dynamic = "force-dynamic";
 export default async function ProductsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string; sort?: string }>;
+  searchParams: Promise<{ category?: string }>;
 }) {
-  const { category, sort } = await searchParams;
+  const { category } = await searchParams;
   const [categories, { identity }] = await Promise.all([getStoreCategories(), getSettings()]);
   const current = categories.find((c) => c.slug === category);
 
@@ -29,19 +28,14 @@ export default async function ProductsPage({
         )}
       </Reveal>
 
-      <ShopFilters categories={categories} active={category} sort={sort} />
-
-      <Suspense key={`${category}-${sort}`} fallback={<ProductGridSkeleton className="mt-10" />}>
-        <Grid category={category} sort={sort} />
+      <Suspense key={category ?? "all"} fallback={<ProductGridSkeleton className="mt-16" />}>
+        <Browser category={category} categories={categories} />
       </Suspense>
     </div>
   );
 }
 
-async function Grid({ category, sort }: { category?: string; sort?: string }) {
-  let products = await getProducts({ categorySlug: category });
-  if (sort === "price-asc") products = [...products].sort((a, b) => a.price - b.price);
-  if (sort === "price-desc") products = [...products].sort((a, b) => b.price - a.price);
-  if (sort === "name") products = [...products].sort((a, b) => a.name.localeCompare(b.name));
-  return <ShopGrid products={products} />;
+async function Browser({ category, categories }: { category?: string; categories: { name: string; slug: string }[] }) {
+  const products = await getProducts({ categorySlug: category });
+  return <ShopBrowser products={products} categories={categories} activeCategory={category} />;
 }
