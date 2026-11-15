@@ -245,7 +245,7 @@ export function VideoField({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
         {value && (
           <video
-            src={value}
+            src={value.includes("#") ? value : `${value}#t=0.1`}
             muted
             playsInline
             preload="metadata"

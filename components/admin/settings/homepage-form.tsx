@@ -5,7 +5,7 @@ import { FEATURE_ICON_COMPONENTS } from "@/components/feature-icons";
 import { Input } from "@/components/ui/input";
 import { useSectionForm } from "./use-section-form";
 import { ListEditor } from "./list-editor";
-import { Field, SaveBar, SettingsCard, TextAreaField, TextField, Toggle, VideoField } from "./fields";
+import { Field, ImageField, SaveBar, SettingsCard, TextAreaField, TextField, Toggle, VideoField } from "./fields";
 
 type Cta = HomepageSettings["hero"]["primaryCta"];
 
@@ -17,6 +17,7 @@ const SECTION_LABELS: Record<keyof HomepageSettings["sections"], string> = {
   testimonials: "Customer reviews",
   promo: "Spend more, save more",
   faq: "FAQ",
+  reels: "Social reels",
 };
 
 export function HomepageForm({ initial }: { initial: HomepageSettings }) {
@@ -156,6 +157,79 @@ export function HomepageForm({ initial }: { initial: HomepageSettings }) {
           onChange={(description) => sub("products", { description })}
           maxLength={200}
           rows={2}
+        />
+      </SettingsCard>
+
+      <SettingsCard
+        title="Social reels"
+        description="Vertical videos from your social feed, shown in a swipeable row inside phone frames. Visitors tap a video to play it. Add, replace, reorder or delete them here."
+      >
+        <div className="grid gap-4 sm:grid-cols-3">
+          <TextField
+            label="Small heading"
+            value={v.reels.eyebrow}
+            onChange={(eyebrow) => sub("reels", { eyebrow })}
+            maxLength={40}
+          />
+          <TextField
+            label="Title"
+            value={v.reels.title}
+            onChange={(title) => sub("reels", { title })}
+            maxLength={80}
+          />
+          <TextField
+            label="Subtitle"
+            value={v.reels.subtitle}
+            onChange={(subtitle) => sub("reels", { subtitle })}
+            maxLength={160}
+          />
+        </div>
+        <ListEditor
+          items={v.reels.items}
+          onChange={(items) => sub("reels", { items })}
+          max={12}
+          addLabel="Add reel"
+          emptyText="No reels yet. The section is hidden until you add one."
+          newItem={() => ({ videoUrl: "", posterUrl: "", handle: "", caption: "", link: "" })}
+          renderItem={(item, update, i) => (
+            <div className="space-y-3">
+              <VideoField
+                label={`Reel ${i + 1} video`}
+                hint="Upload a vertical video (up to 100 MB) or paste an https:// link. Replace it any time by uploading another."
+                value={item.videoUrl}
+                onChange={(videoUrl) => update({ ...item, videoUrl })}
+                error={errors[`reels.items.${i}.videoUrl`]}
+              />
+              <ImageField
+                label="Cover image (optional)"
+                hint="Shown before the video plays. Leave empty and videos uploaded here get a cover automatically."
+                value={item.posterUrl}
+                onChange={(posterUrl) => update({ ...item, posterUrl })}
+                error={errors[`reels.items.${i}.posterUrl`]}
+              />
+              <div className="grid gap-3 sm:grid-cols-2">
+                <TextField
+                  label="Handle"
+                  hint="e.g. @rosiebelle"
+                  value={item.handle}
+                  onChange={(handle) => update({ ...item, handle })}
+                  maxLength={40}
+                />
+                <TextField
+                  label="Link to the post (optional)"
+                  value={item.link}
+                  onChange={(link) => update({ ...item, link })}
+                  error={errors[`reels.items.${i}.link`]}
+                />
+              </div>
+              <TextField
+                label="Caption"
+                value={item.caption}
+                onChange={(caption) => update({ ...item, caption })}
+                maxLength={120}
+              />
+            </div>
+          )}
         />
       </SettingsCard>
 

@@ -77,6 +77,18 @@ export const settings: Record<SettingsSection, unknown> = {
         { icon: "truck", title: "Pan-India delivery", copy: "Free shipping over ₹999, carefully packed in recycled paper." },
       ],
     },
+    // Placeholder videos (Cloudinary demo cloud). Replace in Admin > Settings > Homepage > Social reels.
+    reels: {
+      eyebrow: "Follow along",
+      title: "Seen on social",
+      subtitle: "Short films from our feed. Tap one to play.",
+      items: [
+        { videoUrl: "https://res.cloudinary.com/demo/video/upload/dog.mp4", posterUrl: "", handle: "@rosiebelle", caption: "Sunday ritual: three drops, one deep breath.", link: "" },
+        { videoUrl: "https://res.cloudinary.com/demo/video/upload/elephants.mp4", posterUrl: "", handle: "@rosiebelle", caption: "Where our frankincense comes from.", link: "" },
+        { videoUrl: "https://res.cloudinary.com/demo/video/upload/samples/sea-turtle.mp4", posterUrl: "", handle: "@rosiebelle", caption: "Slow mornings with Morning Light.", link: "" },
+        { videoUrl: "https://res.cloudinary.com/demo/video/upload/samples/cld-sample-video.mp4", posterUrl: "", handle: "@rosiebelle", caption: "Behind the scenes: bottling day.", link: "" },
+      ],
+    },
     testimonials: {
       title: "From the diffusers of India",
       subtitle: "Real words from real rituals.",

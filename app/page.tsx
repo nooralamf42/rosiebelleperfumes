@@ -5,6 +5,7 @@ import { ProductShowcase } from "@/components/home/product-showcase";
 import { Ritual } from "@/components/home/ritual";
 import { Features } from "@/components/home/features";
 import { Testimonials } from "@/components/home/testimonials";
+import { Reels } from "@/components/home/reels";
 import { BundlePromo } from "@/components/home/bundle-promo";
 import { Faq } from "@/components/home/faq";
 import { NewsletterBand } from "@/components/home/newsletter-band";
@@ -45,6 +46,7 @@ export default async function HomePage() {
       )}
       <Ritual />
       {show.features && <Features content={home.features} />}
+      {show.reels && <Reels content={home.reels} />}
       {show.testimonials && <Testimonials content={home.testimonials} reviews={reviews} />}
       {show.promo && <BundlePromo content={home.promo} rules={toCommerceRules(settings)} />}
       {show.faq && <Faq content={home.faq} />}

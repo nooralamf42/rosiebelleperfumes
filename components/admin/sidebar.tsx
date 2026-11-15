@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
-import { FileText, LayoutDashboard, Package, Settings, ShoppingCart, Store } from "lucide-react";
+import { FileText, LayoutDashboard, Loader2, Package, Settings, ShoppingCart, Store, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const links = [
@@ -12,6 +12,20 @@ const links = [
   { href: "/admin/pages", label: "Pages", icon: FileText },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
+
+/**
+ * Lives inside a <Link>: while that link's page is loading it swaps the icon
+ * for a spinner and shows a thin progress bar across the top of the screen.
+ */
+function LinkIcon({ icon: Icon }: { icon: LucideIcon }) {
+  const { pending } = useLinkStatus();
+  return (
+    <>
+      {pending ? <Loader2 className="size-4 animate-spin" /> : <Icon className="size-4" />}
+      {pending && <span className="nav-pending-bar" aria-hidden />}
+    </>
+  );
+}
 
 export function AdminSidebar() {
   const pathname = usePathname();
@@ -35,7 +49,7 @@ export function AdminSidebar() {
                   : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground lg:bg-transparent",
               )}
             >
-              <l.icon className="size-4" />
+              <LinkIcon icon={l.icon} />
               {l.label}
             </Link>
           );

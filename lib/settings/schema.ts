@@ -225,6 +225,21 @@ const featureItem = z.object({
   copy: text(160),
 });
 
+/** One social reel / short video. Poster is optional: Cloudinary videos get a frame automatically. */
+const reelItem = z.object({
+  videoUrl: z
+    .string()
+    .trim()
+    .max(500)
+    .refine((v) => v === "" || v.toLowerCase().startsWith("https://"), "Must be an https:// link")
+    .default(""),
+  posterUrl: imageUrl,
+  handle: text(40),
+  caption: text(120),
+  /** Optional link to the original post (Instagram, YouTube...). */
+  link: link(),
+});
+
 const faqItem = z.object({
   q: text(160),
   a: text(1000),
@@ -240,6 +255,7 @@ export const homepageSchema = z.object({
       testimonials: z.boolean().default(true),
       promo: z.boolean().default(true),
       faq: z.boolean().default(true),
+      reels: z.boolean().default(true),
     })
     .prefault({}),
   hero: z
@@ -284,6 +300,14 @@ export const homepageSchema = z.object({
     .object({
       title: text(80, "Loved by our customers"),
       subtitle: text(160, "Real reviews from real shoppers."),
+    })
+    .prefault({}),
+  reels: z
+    .object({
+      eyebrow: text(40, "Follow along"),
+      title: text(80, "Seen on social"),
+      subtitle: text(160, "Short films from our feed."),
+      items: z.array(reelItem).max(12, "Up to 12 reels").default([]),
     })
     .prefault({}),
   promo: z
