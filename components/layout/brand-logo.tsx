@@ -12,8 +12,10 @@ export function splitBrand(name: string): { main: string; sub: string } {
 
 /**
  * Store brand lockup: the uploaded logo when set (Admin → Settings → Store),
- * otherwise a stacked wordmark: the first word in the display serif (mixed
- * case) with the rest of the name as a small, widely spaced line beneath.
+ * otherwise a stacked wordmark. The first word is set large in the display
+ * serif (mixed case); the rest of the name sits underneath in small caps,
+ * letter-spaced out to exactly the width of the main word so the two lines
+ * read as one block, the way fragrance houses lock up long names.
  * Uses <img>, not next/image, so logos from any https host work without
  * editing next.config's remotePatterns.
  */
@@ -37,12 +39,12 @@ export function BrandLogo({
 
   const { main, sub } = splitBrand(name);
   return (
-    <span className={cn("inline-flex flex-col items-center leading-none", className)} aria-label={name}>
+    <span className={cn("inline-flex flex-col items-stretch leading-none", className)} aria-label={name}>
       <span
         aria-hidden
         className={cn(
-          "font-heading font-normal tracking-[0.01em]",
-          size === "lg" ? "text-4xl sm:text-5xl" : "text-[1.65rem] sm:text-[1.85rem]",
+          "text-center font-heading font-normal tracking-[0.01em]",
+          size === "lg" ? "text-5xl sm:text-6xl" : "text-[2rem] sm:text-[2.2rem]",
         )}
       >
         {main}
@@ -51,11 +53,13 @@ export function BrandLogo({
         <span
           aria-hidden
           className={cn(
-            "font-body uppercase text-foreground/70",
-            size === "lg" ? "mt-2 text-[10px] tracking-[0.5em] pl-[0.5em]" : "mt-1 text-[8px] tracking-[0.42em] pl-[0.42em]",
+            "flex w-full justify-between font-body font-medium uppercase text-foreground/80",
+            size === "lg" ? "mt-2 text-[12px]" : "mt-[3px] text-[9px] sm:text-[10px]",
           )}
         >
-          {sub}
+          {Array.from(sub).map((ch, i) => (
+            <span key={i}>{ch}</span>
+          ))}
         </span>
       )}
     </span>

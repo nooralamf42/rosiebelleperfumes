@@ -75,7 +75,7 @@ export function Preloader({ name }: { name: string }) {
           />
           <rect className="pl-fill" x="0" y="140" width="100" height="150" fill="var(--amber)" clipPath="url(#pl-clip)" />
         </svg>
-        <div className="flex flex-col items-center gap-2">
+        <div className="flex flex-col items-stretch gap-2">
           <p className="flex overflow-hidden font-heading text-5xl tracking-[0.02em] sm:text-6xl">
             {main.split("").map((ch, i) => (
               <span key={i} className="pl-letter inline-block">
@@ -83,7 +83,13 @@ export function Preloader({ name }: { name: string }) {
               </span>
             ))}
           </p>
-          {sub && <p className="pl-sub text-[11px] uppercase tracking-[0.5em] pl-[0.5em] text-primary-foreground/80">{sub}</p>}
+          {sub && (
+            <p className="pl-sub flex w-full justify-between text-[12px] font-medium uppercase text-primary-foreground/80">
+              {Array.from(sub).map((ch, i) => (
+                <span key={i}>{ch}</span>
+              ))}
+            </p>
+          )}
         </div>
         <p className="pl-sub text-[11px] uppercase tracking-[0.3em] text-primary-foreground/70">
           Pure botanicals, bottled

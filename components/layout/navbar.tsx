@@ -51,7 +51,7 @@ export function Navbar({
   const { identity } = useSiteSettings();
   useLenisLock(mobileOpen);
 
-  const primary: NavLink[] = [...extraLinks, { href: "/#story", label: "Our story" }, { href: "/track-order", label: "Track order" }].slice(0, 3);
+  const primary: NavLink[] = [...extraLinks, { href: "/#story", label: "Our story" }].slice(0, 2);
 
   useEffect(() => {
     const onScroll = () => {
@@ -92,8 +92,8 @@ export function Navbar({
         scrolled || shopOpen ? "glass border-b border-foreground/10" : "border-b border-transparent bg-transparent",
       )}
     >
-      <nav className="container-page flex h-16 items-center justify-between gap-6">
-        {/* left: mobile menu + brand */}
+      <nav className="container-page grid h-16 grid-cols-[1fr_auto_1fr] items-center gap-4">
+        {/* left: mobile menu / desktop links */}
         <div className="flex items-center gap-2">
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger render={<Button variant="ghost" size="icon" className="-ml-2 rounded-full md:hidden" />}>
@@ -113,7 +113,7 @@ export function Navbar({
                   </motion.div>
                 ))}
                 <div className="mt-6 flex flex-col gap-3">
-                  {primary.map((l) => (
+                  {[...primary, { href: "/track-order", label: "Track order" }].map((l) => (
                     <Link key={l.label} href={l.href} onClick={() => setMobileOpen(false)} className="text-sm text-foreground/75">
                       {l.label}
                     </Link>
@@ -130,13 +130,7 @@ export function Navbar({
             </SheetContent>
           </Sheet>
 
-          <Link href="/" aria-label={`${identity.storeName} home`}>
-            <BrandLogo name={identity.storeName} logoUrl={identity.logoUrl} />
-          </Link>
-        </div>
-
-        {/* center: compact primary nav */}
-        <div className="hidden items-center gap-8 md:flex">
+<div className="hidden items-center gap-7 md:flex">
           <div onMouseEnter={openShop} onMouseLeave={closeShop} className="relative">
             <Link
               href="/products"
@@ -155,6 +149,13 @@ export function Navbar({
             </Link>
           ))}
         </div>
+        </div>
+
+        {/* center: brand */}
+        <Link href="/" className="justify-self-center" aria-label={`${identity.storeName} home`}>
+            <BrandLogo name={identity.storeName} logoUrl={identity.logoUrl} />
+          </Link>
+
 
         {/* right: actions */}
         <div className="flex shrink-0 items-center justify-end gap-1 sm:gap-2">
