@@ -110,8 +110,8 @@ export function ShopBrowser({
     <>
       {/* category pills + toolbar */}
       <div className="sticky top-[var(--nav-offset,4rem)] z-30 -mx-4 mt-8 border-y border-foreground/10 bg-background px-4 transition-[top] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-        <div className="flex items-center justify-between gap-4 py-3">
-          <div className="mask-fade-x flex gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex items-start justify-between gap-4 py-3">
+          <div className="flex min-w-0 gap-1 overflow-x-auto [scrollbar-width:none] md:flex-wrap md:overflow-visible [&::-webkit-scrollbar]:hidden">
             <Pill href={hrefForCategory()} label="All" active={!activeCategory} />
             {categories.map((c) => (
               <Pill key={c.slug} href={hrefForCategory(c.slug)} label={c.name} active={activeCategory === c.slug} />
