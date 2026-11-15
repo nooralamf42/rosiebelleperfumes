@@ -345,6 +345,10 @@ html[data-style="minimal"] h1 svg {
   display: inline-block;
   overflow: hidden;
   vertical-align: bottom;
+  /* Room inside the reveal mask for italic overhang and descenders;
+     the negative margin cancels it so layout is unchanged. */
+  padding: 0.04em 0.14em 0.14em 0.04em;
+  margin: -0.04em -0.14em -0.14em -0.04em;
 }
 .reveal-words .word > span {
   display: inline-block;
