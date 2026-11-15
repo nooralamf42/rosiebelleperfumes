@@ -17,6 +17,7 @@ import { PrismaNeon } from "@prisma/adapter-neon";
 import { neonConfig } from "@neondatabase/serverless";
 import ws from "ws";
 import { settingsSchemas, type SettingsSection } from "../lib/settings/schema";
+import { ABOUT_CONTENT, ABOUT_TITLE } from "./pages/about";
 
 neonConfig.webSocketConstructor = ws;
 const db = new PrismaClient({
@@ -35,15 +36,9 @@ async function loadPreset(name: string): Promise<Partial<Record<SettingsSection,
 const pages = [
   {
     slug: "about",
-    title: "About Us",
+    title: ABOUT_TITLE,
     sortOrder: 1,
-    content: `## Our story
-
-{{storeName}} started with a simple idea: beautiful products, honest prices, and service you can count on.
-
-Every piece in our collection is handpicked, quality-checked and packed with care before it ships to you.
-
-Have a question? Visit our [Contact](/contact) page — we'd love to hear from you.`,
+    content: ABOUT_CONTENT,
   },
   {
     slug: "contact",

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import ReactMarkdown, { type Components } from "react-markdown";
 import { splitImageStyle } from "@/lib/cloudinary-url";
+import { cn } from "@/lib/utils";
 import remarkGfm from "remark-gfm";
 
 /*
@@ -65,9 +66,9 @@ const components: Components = {
   },
 };
 
-export function Markdown({ children }: { children: string }) {
+export function Markdown({ children, className }: { children: string; className?: string }) {
   return (
-    <div className="text-base text-foreground/90 [&>*:first-child]:mt-0">
+    <div className={cn("text-base text-foreground/90 [&>*:first-child]:mt-0", className)}>
       <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
         {children}
       </ReactMarkdown>

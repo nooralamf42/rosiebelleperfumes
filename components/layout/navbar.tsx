@@ -51,7 +51,7 @@ export function Navbar({
   const { identity } = useSiteSettings();
   useLenisLock(mobileOpen);
 
-  const primary: NavLink[] = [...extraLinks, { href: "/#story", label: "Our story" }].slice(0, 2);
+  const primary: NavLink[] = extraLinks.slice(0, 2);
 
   useEffect(() => {
     const onScroll = () => {

@@ -5,6 +5,7 @@ import { getSettings } from "@/lib/settings";
 import { fillPageTokens } from "@/lib/page-tokens";
 import { Markdown } from "@/components/content/markdown";
 import { Reveal } from "@/components/motion/reveal";
+import { EditorialPage } from "@/components/content/editorial-page";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -33,6 +34,11 @@ export default async function ContentPage({ params }: Props) {
     month: "long",
     year: "numeric",
   });
+
+  // The About page gets the editorial layout (sections with photos beside the text).
+  if (page.slug === "about") {
+    return <EditorialPage title={page.title} content={fillPageTokens(page.content, settings)} updatedLabel={updated} />;
+  }
 
   return (
     <div className="container-page py-12 sm:py-16">
