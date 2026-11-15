@@ -1,4 +1,4 @@
-# Essentia — essential oils storefront
+# Rosiebelle Perfumes storefront
 
 A full-stack D2C store for essential oils, built on the animated storefront template:
 Next.js 16 (App Router) · Tailwind v4 · Motion + GSAP + Lenis · Three.js hero · Prisma + Neon
@@ -20,7 +20,7 @@ Database setup (Neon):
 
 ```bash
 npm run db:push
-npx tsx prisma/seed-settings.ts --preset=essentia   # brand, theme, homepage, policy pages
+npx tsx prisma/seed-settings.ts --preset=rosiebelle   # brand, theme, homepage, policy pages
 npm run db:seed                                      # 4 categories + 16 products
 ```
 
@@ -36,7 +36,7 @@ npm run db:seed                                      # 4 categories + 16 product
 | Scent profile / aroma-note chips | `lib/scent.ts`, `components/product/product-detail.tsx` |
 | Shop filters, sort, animated grid | `app/products/*` |
 | Skeleton loaders | `app/**/loading.tsx`, `components/product/product-skeleton.tsx` |
-| Starter catalogue & preset | `lib/demo-data.ts`, `prisma/seed.ts`, `prisma/presets/essentia.ts` |
+| Starter catalogue & preset | `lib/demo-data.ts`, `prisma/seed.ts`, `prisma/presets/rosiebelle.ts` |
 
 Admin fields map to the storefront like this: **Aroma notes** → chips on the product page,
 **Mood badge** → ribbon on cards, **Benefits** → "What's inside", **Ingredients & safety** →

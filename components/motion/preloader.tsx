@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 
-const KEY = "essentia:intro-seen";
+const KEY = "rosiebelle:intro-seen";
 
 /**
  * First-visit brand intro: a drop fills, the wordmark rises, the curtain

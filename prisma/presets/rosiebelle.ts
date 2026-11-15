@@ -1,24 +1,24 @@
 /**
- * Essentia store settings:
- *   npx tsx prisma/seed-settings.ts --preset=essentia
+ * Rosiebelle Perfumes store settings:
+ *   npx tsx prisma/seed-settings.ts --preset=rosiebelle
  */
 import type { SettingsSection } from "../../lib/settings/schema";
 
 export const settings: Record<SettingsSection, unknown> = {
   identity: {
-    storeName: "Essentia",
+    storeName: "Rosiebelle Perfumes",
     tagline: "Pure botanicals, bottled.",
-    seoTitle: "Essentia — Pure Essential Oils, Blends & Carrier Oils",
+    seoTitle: "Rosiebelle Perfumes — Pure Essential Oils, Blends & Carrier Oils",
     seoDescription:
       "Single-origin essential oils, small-batch blends and cold-pressed carrier oils, GC/MS tested and delivered across India. From ₹399.",
     footerNote: "Distilled with care in India",
     shopHeading: "The apothecary",
     shopDescription: "Every oil we bottle, from single botanicals to ready-to-diffuse blends.",
-    contactEmail: "hello@essentia.in",
+    contactEmail: "hello@rosiebelle.in",
     contactPhone: "+91 98765 43210",
     whatsapp: "9876543210",
-    address: "Essentia Botanicals, 14 Lavelle Road, Bengaluru 560001",
-    socials: { instagram: "https://instagram.com/essentia", facebook: "", youtube: "", x: "" },
+    address: "Rosiebelle Perfumes, India",
+    socials: { instagram: "https://instagram.com/rosiebelleperfumes", facebook: "", youtube: "", x: "" },
   },
   theme: {
     preset: "botanical",
@@ -68,7 +68,7 @@ export const settings: Record<SettingsSection, unknown> = {
       description: "Bestsellers from the apothecary, chosen by the people who diffuse them every day.",
     },
     features: {
-      eyebrow: "Why Essentia",
+      eyebrow: "Why Rosiebelle",
       title: "Honest oils, no shortcuts",
       items: [
         { icon: "leaf", title: "Single origin", copy: "Each oil names its botanical and the region it was grown in." },

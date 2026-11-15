@@ -71,7 +71,7 @@
 :root {
   --radius: 1.1rem;
 
-  /* Essentia botanical palette: amber glass, forest, bone, sage. */
+  /* Rosiebelle botanical palette: amber glass, forest, bone, sage. */
   --amber: #c8842f;
   --amber-deep: #8a5218;
   --sage: #9fb5a2;
@@ -274,7 +274,7 @@ html[data-style="minimal"] h1 svg {
   display: none;
 }
 
-/* ---------- Essentia storefront utilities ---------- */
+/* ---------- Rosiebelle storefront utilities ---------- */
 @layer utilities {
   .font-display-italic {
     font-style: italic;
