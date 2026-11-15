@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
+import { splitBrand } from "@/components/layout/brand-logo";
 
 const KEY = "rosiebelle:intro-seen";
 
@@ -11,6 +12,7 @@ const KEY = "rosiebelle:intro-seen";
  * who prefer reduced motion), ~1.5s total.
  */
 export function Preloader({ name }: { name: string }) {
+  const { main, sub } = splitBrand(name);
   const [show, setShow] = useState(false);
   const root = useRef<HTMLDivElement>(null);
 
@@ -73,16 +75,16 @@ export function Preloader({ name }: { name: string }) {
           />
           <rect className="pl-fill" x="0" y="140" width="100" height="150" fill="var(--amber)" clipPath="url(#pl-clip)" />
         </svg>
-        <p className="flex overflow-hidden font-heading text-4xl tracking-[0.18em] sm:text-5xl">
-          {name
-            .toUpperCase()
-            .split("")
-            .map((ch, i) => (
+        <div className="flex flex-col items-center gap-2">
+          <p className="flex overflow-hidden font-heading text-5xl tracking-[0.02em] sm:text-6xl">
+            {main.split("").map((ch, i) => (
               <span key={i} className="pl-letter inline-block">
-                {ch === " " ? " " : ch}
+                {ch}
               </span>
             ))}
-        </p>
+          </p>
+          {sub && <p className="pl-sub text-[11px] uppercase tracking-[0.5em] pl-[0.5em] text-primary-foreground/80">{sub}</p>}
+        </div>
         <p className="pl-sub text-[11px] uppercase tracking-[0.3em] text-primary-foreground/70">
           Pure botanicals, bottled
         </p>

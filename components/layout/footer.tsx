@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { BrandLogo } from "./brand-logo";
+import { splitBrand } from "./brand-logo";
 import type { IdentitySettings } from "@/lib/settings/schema";
 import type { PageLink } from "@/lib/pages";
 
@@ -67,7 +68,7 @@ export function Footer({
       <div className="container-page grid gap-12 py-16 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
         <div>
           <Link href="/" aria-label={`${identity.storeName} home`}>
-            <BrandLogo name={identity.storeName} logoUrl={identity.logoUrl} className="h-10 font-heading text-3xl tracking-[0.06em]" />
+            <BrandLogo name={identity.storeName} logoUrl={identity.logoUrl} size="lg" className="items-start" />
           </Link>
           {identity.tagline && (
             <p className="mt-4 max-w-xs font-heading text-lg leading-snug text-foreground/80">{identity.tagline}</p>
@@ -141,7 +142,7 @@ export function Footer({
       {/* giant wordmark */}
       <div className="container-page pointer-events-none select-none overflow-hidden" aria-hidden>
         <p className="translate-y-[18%] text-center font-heading text-[clamp(4rem,19vw,16rem)] leading-none tracking-[-0.02em] text-foreground/[0.06]">
-          {identity.storeName}
+          {splitBrand(identity.storeName).main}
         </p>
       </div>
 

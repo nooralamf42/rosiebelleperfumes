@@ -131,11 +131,7 @@ export function Navbar({
           </Sheet>
 
           <Link href="/" aria-label={`${identity.storeName} home`}>
-            <BrandLogo
-              name={identity.storeName}
-              logoUrl={identity.logoUrl}
-              className="whitespace-nowrap font-heading text-[1.55rem] tracking-[0.08em]"
-            />
+            <BrandLogo name={identity.storeName} logoUrl={identity.logoUrl} />
           </Link>
         </div>
 
