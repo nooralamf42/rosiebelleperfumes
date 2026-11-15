@@ -57,12 +57,18 @@ export function Navbar({
     const onScroll = () => {
       const y = window.scrollY;
       setScrolled(y > 24);
-      setHidden(y > 160 && y > lastY.current);
+      const hide = y > 160 && y > lastY.current;
+      setHidden(hide);
       lastY.current = y;
+      // Sticky elements below the header (shop filter bar) follow this.
+      document.documentElement.style.setProperty("--nav-offset", hide ? "0px" : "4rem");
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      document.documentElement.style.removeProperty("--nav-offset");
+    };
   }, []);
 
   const openShop = () => {
