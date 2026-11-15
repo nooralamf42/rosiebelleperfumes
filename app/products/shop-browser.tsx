@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { SlidersHorizontal, X } from "lucide-react";
 import { ProductCard } from "@/components/product/product-card";
@@ -110,13 +110,13 @@ export function ShopBrowser({
     <>
       {/* category pills + toolbar */}
       <div className="sticky top-[var(--nav-offset,4rem)] z-30 -mx-4 mt-8 border-y border-foreground/10 bg-background px-4 transition-[top] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-        <div className="flex items-start justify-between gap-4 py-3">
-          <div className="flex min-w-0 gap-1 overflow-x-auto [scrollbar-width:none] md:flex-wrap md:overflow-visible [&::-webkit-scrollbar]:hidden">
+        <div className="flex flex-col gap-2 py-3 md:flex-row md:items-start md:justify-between md:gap-4">
+          <PillRow>
             <Pill href={hrefForCategory()} label="All" active={!activeCategory} />
             {categories.map((c) => (
               <Pill key={c.slug} href={hrefForCategory(c.slug)} label={c.name} active={activeCategory === c.slug} />
             ))}
-          </div>
+          </PillRow>
 
           <div className="flex shrink-0 items-center gap-2">
             <button
@@ -302,6 +302,7 @@ function Pill({ href, label, active }: { href: string; label: string; active: bo
     <Link
       href={href}
       scroll={false}
+      data-active={active}
       className={cn(
         "relative shrink-0 rounded-full px-4 py-2 text-xs font-medium uppercase tracking-[0.12em] transition-colors",
         active ? "text-primary-foreground" : "text-foreground/70 hover:text-foreground",
@@ -358,6 +359,51 @@ function RangeSlider({
           className="range-thumb pointer-events-none absolute inset-0 w-full appearance-none bg-transparent"
         />
       ))}
+    </div>
+  );
+}
+
+/**
+ * Category pills: wraps on wide screens, scrolls sideways on phones. The row
+ * fades only on a side that has more to scroll to (so nothing is clipped when
+ * it all fits), and the selected pill is scrolled into view on load.
+ */
+function PillRow({ children }: { children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [edges, setEdges] = useState({ left: false, right: false });
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const update = () => {
+      const scrollable = el.scrollWidth > el.clientWidth + 1;
+      setEdges({
+        left: scrollable && el.scrollLeft > 4,
+        right: scrollable && el.scrollLeft + el.clientWidth < el.scrollWidth - 4,
+      });
+    };
+    const active = el.querySelector<HTMLElement>("[data-active=true]");
+    if (active && el.scrollWidth > el.clientWidth) {
+      el.scrollLeft = active.offsetLeft - (el.clientWidth - active.offsetWidth) / 2;
+    }
+    el.addEventListener("scroll", update, { passive: true });
+    const ro = new ResizeObserver(update); // also fires once on observe
+    ro.observe(el);
+    return () => {
+      el.removeEventListener("scroll", update);
+      ro.disconnect();
+    };
+  }, []);
+
+  const mask = `linear-gradient(to right, ${edges.left ? "transparent, black 36px" : "black, black"}, ${edges.right ? "black calc(100% - 36px), transparent" : "black, black"})`;
+
+  return (
+    <div
+      ref={ref}
+      style={{ maskImage: mask, WebkitMaskImage: mask }}
+      className="flex w-full min-w-0 gap-1 overflow-x-auto [scrollbar-width:none] md:flex-wrap md:overflow-visible [&::-webkit-scrollbar]:hidden"
+    >
+      {children}
     </div>
   );
 }
