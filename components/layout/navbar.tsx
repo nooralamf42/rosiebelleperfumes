@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowUpRight, ChevronDown, Menu, ShoppingBag, Search } from "lucide-react";
 import { BrandLogo } from "./brand-logo";
-import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
+import { Show, SignInButton, UserButton } from "@clerk/nextjs";
 import { useCart, useHydrated } from "@/store/cart";
 import { useLenisLock } from "@/components/providers/smooth-scroll-provider";
 import { useSiteSettings } from "@/components/providers/site-settings-provider";
@@ -119,11 +119,11 @@ export function Navbar({
                     </Link>
                   ))}
                   {clerkEnabled && (
-                    <SignedIn>
+                    <Show when="signed-in">
                       <Link href="/orders" onClick={() => setMobileOpen(false)} className="text-sm text-foreground/75">
                         My orders
                       </Link>
-                    </SignedIn>
+                    </Show>
                   )}
                 </div>
               </div>
@@ -169,17 +169,17 @@ export function Navbar({
 
           {clerkEnabled ? (
             <>
-              <SignedIn>
+              <Show when="signed-in">
                 <Link href="/orders" className="hidden text-[13px] font-medium text-foreground/75 hover:text-foreground lg:block">
                   Orders
                 </Link>
                 <UserButton appearance={{ elements: { avatarBox: "size-7" } }} />
-              </SignedIn>
-              <SignedOut>
+              </Show>
+              <Show when="signed-out">
                 <SignInButton mode="modal">
                   <button className="hidden text-[13px] font-medium text-foreground/75 hover:text-foreground sm:block">Sign in</button>
                 </SignInButton>
-              </SignedOut>
+              </Show>
             </>
           ) : (
             <Link href="/sign-in" className="hidden text-[13px] font-medium text-foreground/75 hover:text-foreground sm:block">
