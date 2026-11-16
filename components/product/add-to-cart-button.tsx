@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { useCart } from "@/store/cart";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { priceForSize } from "@/lib/sizes";
 import type { StoreProduct } from "@/lib/types";
 import type { ComponentProps, ReactNode } from "react";
 
@@ -11,6 +12,7 @@ export function AddToCartButton({
   product,
   qty = 1,
   selectedSize = null,
+  unitPrice,
   className,
   children,
   variant,
@@ -19,6 +21,8 @@ export function AddToCartButton({
   product: StoreProduct;
   qty?: number;
   selectedSize?: string | null;
+  /** Price of the chosen size, in paise. Defaults to the product price. */
+  unitPrice?: number;
   className?: string;
   children?: ReactNode;
   variant?: ComponentProps<typeof Button>["variant"];
@@ -45,7 +49,7 @@ export function AddToCartButton({
             productId: product.id,
             slug: product.slug,
             name: product.name,
-            price: product.price,
+            price: unitPrice ?? priceForSize(product, selectedSize),
             image: product.images[0] ?? null,
             accentColor: product.accentColor,
             size: selectedSize,

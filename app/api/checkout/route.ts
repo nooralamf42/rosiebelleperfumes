@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { checkoutSchema } from "@/lib/validators";
 import { getProductsByIds } from "@/lib/products";
 import { computeTotals } from "@/lib/cart-totals";
+import { priceForSize } from "@/lib/sizes";
 import { getCommerceRules } from "@/lib/settings";
 import { getRazorpay } from "@/lib/razorpay";
 import { queueOrderEmail } from "@/lib/email";
@@ -45,7 +46,8 @@ export async function POST(req: Request) {
       return {
         productId: p.id,
         name: p.name,
-        price: p.price,
+        // Per-size price from the catalog, never from the browser.
+        price: priceForSize(p, i.size),
         image: p.images[0] ?? null,
         quantity: i.quantity,
         size: i.size ?? null,

@@ -27,7 +27,7 @@ const rawDemoProducts: Omit<StoreProduct, "sizes">[] = [
     accentColor: "brand-lavender",
     flavor: "Lavender, soft herb, faint honey",
     mood: "Calm",
-    benefits: ["100% pure, single origin", "Steam distilled", "GC/MS tested", "15 ml amber glass"],
+    benefits: ["100% pure, single origin", "Steam distilled", "GC/MS tested", "12, 6 or 3 ml glass bottle"],
     ingredients: "Lavandula angustifolia (lavender) flower oil. For aromatic and diluted topical use. Keep away from eyes.",
     stock: 120,
     featured: true,
@@ -46,7 +46,7 @@ const rawDemoProducts: Omit<StoreProduct, "sizes">[] = [
     accentColor: "brand-mint",
     flavor: "Peppermint, cool mint, green",
     mood: "Focus",
-    benefits: ["100% pure", "Steam distilled", "High menthol", "15 ml amber glass"],
+    benefits: ["100% pure", "Steam distilled", "High menthol", "12, 6 or 3 ml glass bottle"],
     ingredients: "Mentha piperita (peppermint) oil. Dilute before applying to skin. Not for children under 6.",
     stock: 90,
     featured: true,
@@ -65,7 +65,7 @@ const rawDemoProducts: Omit<StoreProduct, "sizes">[] = [
     accentColor: "brand-sky",
     flavor: "Tea tree, camphor, fresh green",
     mood: "Clarify",
-    benefits: ["100% pure", "Terpinen-4-ol rich", "GC/MS tested", "15 ml amber glass"],
+    benefits: ["100% pure", "Terpinen-4-ol rich", "GC/MS tested", "12, 6 or 3 ml glass bottle"],
     ingredients: "Melaleuca alternifolia (tea tree) leaf oil. External use only; patch test first.",
     stock: 110,
     featured: false,
@@ -84,7 +84,7 @@ const rawDemoProducts: Omit<StoreProduct, "sizes">[] = [
     accentColor: "brand-tangerine",
     flavor: "Orange peel, sweet citrus, zest",
     mood: "Uplift",
-    benefits: ["100% pure", "Cold pressed", "Food-grade peel", "15 ml amber glass"],
+    benefits: ["100% pure", "Cold pressed", "Food-grade peel", "12, 6 or 3 ml glass bottle"],
     ingredients: "Citrus sinensis (sweet orange) peel oil. Mildly photosensitising; avoid sun after topical use.",
     stock: 150,
     featured: true,
@@ -103,7 +103,7 @@ const rawDemoProducts: Omit<StoreProduct, "sizes">[] = [
     accentColor: "brand-mint",
     flavor: "Eucalyptus, camphor, cool green",
     mood: "Breathe",
-    benefits: ["100% pure", "Steam distilled", "High cineole", "15 ml amber glass"],
+    benefits: ["100% pure", "Steam distilled", "High cineole", "12, 6 or 3 ml glass bottle"],
     ingredients: "Eucalyptus globulus leaf oil. Not for children under 10. Dilute before topical use.",
     stock: 80,
     featured: false,
@@ -122,7 +122,7 @@ const rawDemoProducts: Omit<StoreProduct, "sizes">[] = [
     accentColor: "brand-grape",
     flavor: "Resin, soft lemon, dry wood",
     mood: "Ground",
-    benefits: ["100% pure", "Wild-harvested resin", "Steam distilled", "10 ml amber glass"],
+    benefits: ["100% pure", "Wild-harvested resin", "Steam distilled", "12, 6 or 3 ml glass bottle"],
     ingredients: "Boswellia serrata (frankincense) resin oil. For aromatic and diluted topical use.",
     stock: 45,
     featured: true,
@@ -142,7 +142,7 @@ const rawDemoProducts: Omit<StoreProduct, "sizes">[] = [
     accentColor: "brand-lavender",
     flavor: "Lavender, cedarwood, chamomile",
     mood: "Sleep",
-    benefits: ["Diffuser-ready blend", "No synthetic fragrance", "Blended in small batches", "15 ml amber glass"],
+    benefits: ["Diffuser-ready blend", "No synthetic fragrance", "Blended in small batches", "12, 6 or 3 ml glass bottle"],
     ingredients: "Lavandula angustifolia, Cedrus atlantica, Anthemis nobilis oils.",
     stock: 70,
     featured: true,
@@ -161,7 +161,7 @@ const rawDemoProducts: Omit<StoreProduct, "sizes">[] = [
     accentColor: "brand-lemon",
     flavor: "Bergamot, grapefruit, rosemary",
     mood: "Energise",
-    benefits: ["Diffuser-ready blend", "No synthetic fragrance", "Blended in small batches", "15 ml amber glass"],
+    benefits: ["Diffuser-ready blend", "No synthetic fragrance", "Blended in small batches", "12, 6 or 3 ml glass bottle"],
     ingredients: "Citrus bergamia, Citrus paradisi, Rosmarinus officinalis oils. Photosensitising.",
     stock: 65,
     featured: true,
@@ -180,7 +180,7 @@ const rawDemoProducts: Omit<StoreProduct, "sizes">[] = [
     accentColor: "brand-sky",
     flavor: "Eucalyptus, peppermint, lemon",
     mood: "Breathe",
-    benefits: ["Diffuser-ready blend", "No synthetic fragrance", "Blended in small batches", "15 ml amber glass"],
+    benefits: ["Diffuser-ready blend", "No synthetic fragrance", "Blended in small batches", "12, 6 or 3 ml glass bottle"],
     ingredients: "Eucalyptus globulus, Mentha piperita, Citrus limon oils. Not for young children.",
     stock: 60,
     featured: false,
@@ -199,7 +199,7 @@ const rawDemoProducts: Omit<StoreProduct, "sizes">[] = [
     accentColor: "brand-peach",
     flavor: "Frankincense, sandalwood, vetiver",
     mood: "Ground",
-    benefits: ["Diffuser-ready blend", "Mysore sandalwood", "Blended in small batches", "10 ml amber glass"],
+    benefits: ["Diffuser-ready blend", "Mysore sandalwood", "Blended in small batches", "12, 6 or 3 ml glass bottle"],
     ingredients: "Boswellia serrata, Santalum album, Vetiveria zizanioides oils.",
     stock: 30,
     featured: true,
@@ -219,7 +219,7 @@ const rawDemoProducts: Omit<StoreProduct, "sizes">[] = [
     accentColor: "brand-lemon",
     flavor: "Unscented, light, non-greasy",
     mood: "Dilute",
-    benefits: ["Cold pressed, unrefined", "Non-comedogenic", "Long shelf life", "100 ml amber glass"],
+    benefits: ["Cold pressed, unrefined", "Non-comedogenic", "Long shelf life", "12, 6 or 3 ml glass bottle"],
     ingredients: "Simmondsia chinensis (jojoba) seed oil.",
     stock: 85,
     featured: false,
@@ -238,7 +238,7 @@ const rawDemoProducts: Omit<StoreProduct, "sizes">[] = [
     accentColor: "brand-peach",
     flavor: "Faintly nutty, soft, nourishing",
     mood: "Massage",
-    benefits: ["Cold pressed", "Rich in vitamin E", "Massage base", "200 ml amber glass"],
+    benefits: ["Cold pressed", "Rich in vitamin E", "Massage base", "12, 6 or 3 ml glass bottle"],
     ingredients: "Prunus amygdalus dulcis (sweet almond) oil. Contains tree nuts.",
     stock: 95,
     featured: false,
@@ -257,7 +257,7 @@ const rawDemoProducts: Omit<StoreProduct, "sizes">[] = [
     accentColor: "brand-sky",
     flavor: "Odourless, clear, fast-absorbing",
     mood: "Dilute",
-    benefits: ["Odourless", "Never solidifies", "Roll-on base", "200 ml amber glass"],
+    benefits: ["Odourless", "Never solidifies", "Roll-on base", "12, 6 or 3 ml glass bottle"],
     ingredients: "Caprylic/capric triglyceride (fractionated coconut oil).",
     stock: 100,
     featured: false,
@@ -296,7 +296,7 @@ const rawDemoProducts: Omit<StoreProduct, "sizes">[] = [
     accentColor: "brand-berry",
     flavor: "Lavender, cedarwood, chamomile",
     mood: "Calm",
-    benefits: ["Pre-diluted 5%", "Steel roller ball", "Travel size", "10 ml amber glass"],
+    benefits: ["Pre-diluted 5%", "Steel roller ball", "Travel size", "12, 6 or 3 ml glass bottle"],
     ingredients: "Caprylic/capric triglyceride, lavender, cedarwood and chamomile oils.",
     stock: 75,
     featured: false,
@@ -315,14 +315,30 @@ const rawDemoProducts: Omit<StoreProduct, "sizes">[] = [
     accentColor: "brand-cherry",
     flavor: "Rosemary, peppermint, lemon",
     mood: "Focus",
-    benefits: ["Pre-diluted 5%", "Steel roller ball", "Travel size", "10 ml amber glass"],
+    benefits: ["Pre-diluted 5%", "Steel roller ball", "Travel size", "12, 6 or 3 ml glass bottle"],
     ingredients: "Caprylic/capric triglyceride, rosemary, peppermint and lemon oils.",
     stock: 75,
     featured: false,
   },
 ];
 
-export const demoProducts: StoreProduct[] = rawDemoProducts.map((p) => ({ ...p, sizes: [] }));
+/** Round to a friendly "…9" rupee price, e.g. 359.4 → 359. */
+const friendly = (n: number) => Math.max(9, Math.round(n / 10) * 10 - 1);
+
+/**
+ * Every perfume comes in three bottle sizes with their own prices: the listed
+ * price is the 12 ml bottle, 6 ml is about 60% of it and 3 ml about 35%.
+ * Gift sets are sold as one size.
+ */
+export function bottleSizeEntries(price: number): string[] {
+  const rupees = Math.round(price / 100);
+  return [`12 ml=${rupees}`, `6 ml=${friendly(rupees * 0.6)}`, `3 ml=${friendly(rupees * 0.35)}`];
+}
+
+export const demoProducts: StoreProduct[] = rawDemoProducts.map((p) => ({
+  ...p,
+  sizes: p.slug.endsWith("-set") ? [] : bottleSizeEntries(p.price),
+}));
 
 /** Category each demo product belongs to (also used by prisma/seed.ts). */
 export const DEMO_CATEGORIES = [

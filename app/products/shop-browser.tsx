@@ -8,6 +8,7 @@ import { SlidersHorizontal, X } from "lucide-react";
 import { ProductCard } from "@/components/product/product-card";
 import { buttonVariants } from "@/components/ui/button";
 import { formatPrice } from "@/lib/format";
+import { startingPrice } from "@/lib/sizes";
 import { cn } from "@/lib/utils";
 import type { StoreProduct } from "@/lib/types";
 
@@ -40,8 +41,8 @@ export function ShopBrowser({
   const router = useRouter();
   const params = useSearchParams();
 
-  const floor = products.length ? roundDown(Math.min(...products.map((p) => p.price))) : 0;
-  const ceil = products.length ? roundUp(Math.max(...products.map((p) => p.price))) : STEP;
+  const floor = products.length ? roundDown(Math.min(...products.map(startingPrice))) : 0;
+  const ceil = products.length ? roundUp(Math.max(...products.map(startingPrice))) : STEP;
 
   const sort = params.get("sort") ?? "";
   const sale = params.get("sale") === "1";
@@ -93,13 +94,13 @@ export function ShopBrowser({
   const visible = useMemo(() => {
     let list = products.filter(
       (p) =>
-        p.price >= urlMin &&
-        p.price <= urlMax &&
+        startingPrice(p) >= urlMin &&
+        startingPrice(p) <= urlMax &&
         (!sale || (p.compareAtPrice ?? 0) > p.price) &&
         (moods.length === 0 || (p.mood && moods.includes(p.mood.trim()))),
     );
-    if (sort === "price-asc") list = [...list].sort((a, b) => a.price - b.price);
-    if (sort === "price-desc") list = [...list].sort((a, b) => b.price - a.price);
+    if (sort === "price-asc") list = [...list].sort((a, b) => startingPrice(a) - startingPrice(b));
+    if (sort === "price-desc") list = [...list].sort((a, b) => startingPrice(b) - startingPrice(a));
     if (sort === "name") list = [...list].sort((a, b) => a.name.localeCompare(b.name));
     return list;
   }, [products, urlMin, urlMax, sale, moods, sort]);

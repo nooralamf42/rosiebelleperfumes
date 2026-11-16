@@ -1,14 +1,14 @@
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
-import { ProductGraphic } from "@/components/product/product-graphic";
+import { AttarBottle } from "@/components/product/attar-bottle";
 import { cn } from "@/lib/utils";
 
 export default function NotFound() {
   return (
     <div className="container-page grid min-h-[70vh] place-items-center py-16 text-center">
       <div>
-        <div className="mx-auto mb-6 size-40 opacity-80">
-          <ProductGraphic accent="brand-tangerine" label="404" className="size-full" />
+        <div className="mx-auto mb-6 h-48 opacity-90">
+          <AttarBottle size="6" accent="brand-tangerine" name="404" className="h-full w-auto" />
         </div>
         <p className="text-eyebrow">Evaporated</p>
         <h1 className="mt-3 text-4xl sm:text-5xl">This page isn&apos;t in the apothecary</h1>

@@ -8,6 +8,7 @@ import { AddToCartButton } from "./add-to-cart-button";
 import { QuickAddSize } from "./quick-add-size";
 import { formatPrice, discountPercent } from "@/lib/format";
 import { moodLabel } from "@/lib/scent";
+import { compareAtForPrice, hasSizePricing, productSizes, startingPrice } from "@/lib/sizes";
 import type { StoreProduct } from "@/lib/types";
 
 export function ProductCard({
@@ -19,6 +20,9 @@ export function ProductCard({
 }) {
   const off = discountPercent(product.price, product.compareAtPrice);
   const mood = moodLabel(product);
+  const from = startingPrice(product);
+  const fromCompare = compareAtForPrice(product, from);
+  const sizeLabels = productSizes(product).map((s) => s.label);
 
   return (
     <motion.article
@@ -65,16 +69,21 @@ export function ProductCard({
                 {product.name}
               </Link>
             </h3>
-            {(product.tagline || product.flavor) && (
-              <p className="mt-1 truncate text-xs text-muted-foreground">{product.tagline || product.flavor}</p>
+            {sizeLabels.length > 0 ? (
+              <p className="mt-1 truncate text-xs text-muted-foreground">{sizeLabels.join(" · ")}</p>
+            ) : (
+              (product.tagline || product.flavor) && (
+                <p className="mt-1 truncate text-xs text-muted-foreground">{product.tagline || product.flavor}</p>
+              )
             )}
           </div>
           <div className="flex shrink-0 flex-col items-end text-sm">
-            <span className="font-medium">{formatPrice(product.price)}</span>
-            {product.compareAtPrice && (
-              <span className="text-xs text-muted-foreground line-through">
-                {formatPrice(product.compareAtPrice)}
-              </span>
+            {hasSizePricing(product) && (
+              <span className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">From</span>
+            )}
+            <span className="font-medium">{formatPrice(from)}</span>
+            {fromCompare && (
+              <span className="text-xs text-muted-foreground line-through">{formatPrice(fromCompare)}</span>
             )}
           </div>
         </div>

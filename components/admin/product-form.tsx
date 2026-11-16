@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus, Trash2 } from "lucide-react";
+import { liquidColor } from "@/components/product/attar-bottle";
+import { formatSizeEntry } from "@/lib/sizes";
 import { saveProduct, deleteProduct } from "@/app/admin/actions";
 import { ImageUploader } from "./image-uploader";
 import { Button } from "@/components/ui/button";
@@ -25,6 +27,75 @@ const accents = [
   "brand-peach",
 ];
 
+type SizeRow = { label: string; price: string };
+
+/** "12 ml=1299" → { label: "12 ml", price: "1299" }; "S" → { label: "S", price: "" }. */
+function rowFromEntry(raw: string): SizeRow {
+  const i = raw.lastIndexOf("=");
+  return i > 0 ? { label: raw.slice(0, i).trim(), price: raw.slice(i + 1).trim() } : { label: raw.trim(), price: "" };
+}
+
+/** Round to a friendly "…9" rupee price, e.g. 359.4 → 359. */
+const friendly = (n: number) => Math.max(9, Math.round(n / 10) * 10 - 1);
+
+/** Rows of size + price (₹). The first size is the default one. */
+function SizesEditor({ rows, onChange, basePrice }: { rows: SizeRow[]; onChange: (r: SizeRow[]) => void; basePrice: number }) {
+  const update = (i: number, patch: Partial<SizeRow>) => onChange(rows.map((r, j) => (j === i ? { ...r, ...patch } : r)));
+  const presetDisabled = basePrice <= 0;
+
+  return (
+    <div className="space-y-2">
+      {rows.length === 0 && (
+        <p className="text-sm text-muted-foreground">No sizes: the product is sold as a single item at the price above.</p>
+      )}
+      {rows.map((r, i) => (
+        <div key={i} className="grid grid-cols-[1fr_8rem_auto] items-center gap-2">
+          <Input placeholder="e.g. 12 ml" value={r.label} onChange={(e) => update(i, { label: e.target.value.replace(/[=,]/g, "") })} aria-label="Size name" />
+          <div className="relative">
+            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">₹</span>
+            <Input
+              type="number"
+              min="0"
+              placeholder="price"
+              value={r.price}
+              onChange={(e) => update(i, { price: e.target.value })}
+              className="pl-7"
+              aria-label={`Price for ${r.label || "this size"}`}
+            />
+          </div>
+          <Button type="button" variant="ghost" size="icon" onClick={() => onChange(rows.filter((_, j) => j !== i))} aria-label="Remove size" className="text-destructive hover:text-destructive">
+            <Trash2 className="size-4" />
+          </Button>
+        </div>
+      ))}
+      <div className="flex flex-wrap gap-2 pt-1">
+        <Button type="button" variant="outline" size="sm" onClick={() => onChange([...rows, { label: "", price: "" }])}>
+          <Plus className="size-4" /> Add size
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={presetDisabled}
+          title={presetDisabled ? "Enter the price above first" : undefined}
+          onClick={() =>
+            onChange([
+              { label: "12 ml", price: String(basePrice) },
+              { label: "6 ml", price: String(friendly(basePrice * 0.6)) },
+              { label: "3 ml", price: String(friendly(basePrice * 0.35)) },
+            ])
+          }
+        >
+          Use 12 / 6 / 3 ml
+        </Button>
+      </div>
+      <p className="text-xs text-muted-foreground">
+        The first size is the default. Leave a price empty to use the product price. Sizes in ml show the matching bottle picture.
+      </p>
+    </div>
+  );
+}
+
 function slugify(s: string) {
   return s
     .toLowerCase()
@@ -43,6 +114,7 @@ export function ProductForm({
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [images, setImages] = useState<string[]>(product?.images ?? []);
+  const [sizeRows, setSizeRows] = useState<SizeRow[]>(() => (product?.sizes ?? []).map(rowFromEntry));
   const [form, setForm] = useState({
     name: product?.name ?? "",
     slug: product?.slug ?? "",
@@ -54,7 +126,6 @@ export function ProductForm({
     flavor: product?.flavor ?? "",
     mood: product?.mood ?? "",
     accentColor: product?.accentColor ?? "brand-berry",
-    sizes: (product?.sizes ?? []).join(", "),
     benefits: (product?.benefits ?? []).join("\n"),
     ingredients: product?.ingredients ?? "",
     stock: product ? String(product.stock) : "0",
@@ -84,7 +155,7 @@ export function ProductForm({
       accentColor: form.accentColor,
       flavor: form.flavor,
       mood: form.mood,
-      sizes: form.sizes.split(",").map((s) => s.trim()).filter(Boolean),
+      sizes: sizeRows.filter((r) => r.label.trim()).map((r) => formatSizeEntry(r.label, r.price)),
       benefits: form.benefits.split("\n").map((s) => s.trim()).filter(Boolean),
       ingredients: form.ingredients,
       stock: Number(form.stock) || 0,
@@ -163,6 +234,9 @@ export function ProductForm({
             value={form.price}
             onChange={(e) => set("price", e.target.value)}
           />
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            With sizes, this is the price of the first size. Each size can have its own price below.
+          </p>
         </Field>
         <Field label="Compare at (₹)">
           <Input
@@ -216,7 +290,7 @@ export function ProductForm({
         </Field>
       </div>
 
-      <Field label="Accent colour">
+      <Field label="Perfume colour">
         <div className="flex flex-wrap gap-2">
           {accents.map((a) => (
             <button
@@ -226,19 +300,19 @@ export function ProductForm({
               className={`size-8 rounded-full border-2 ${
                 form.accentColor === a ? "border-foreground" : "border-transparent"
               }`}
-              style={{ backgroundColor: `var(--${a})` }}
-              aria-label={a}
+              style={{ backgroundColor: liquidColor(a) }}
+              aria-label={a.replace("brand-", "")}
+              title={a.replace("brand-", "")}
             />
           ))}
         </div>
+        <p className="mt-1.5 text-xs text-muted-foreground">
+          The colour of the liquid in the bottle picture, and the tint behind it.
+        </p>
       </Field>
 
-      <Field label="Sizes (comma-separated — leave empty if the product has no sizes)">
-        <Input
-          placeholder="e.g. S, M, L or 2.2, 2.4, 2.6"
-          value={form.sizes}
-          onChange={(e) => set("sizes", e.target.value)}
-        />
+      <Field label="Sizes and prices">
+        <SizesEditor rows={sizeRows} onChange={setSizeRows} basePrice={Number(form.price) || 0} />
       </Field>
 
       <Field label="Highlights (one per line)">

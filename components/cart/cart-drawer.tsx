@@ -9,7 +9,9 @@ import { useCommerceRules } from "@/components/providers/site-settings-provider"
 import { computeTotals } from "@/lib/cart-totals";
 import { formatPrice } from "@/lib/format";
 import { CheckoutButton } from "@/components/cart/checkout-button";
-import { ProductGraphic } from "@/components/product/product-graphic";
+import { AttarBottle } from "@/components/product/attar-bottle";
+import { bottleBackdrop } from "@/components/product/product-media";
+import { bottleSizeOf } from "@/lib/sizes";
 import {
   Sheet,
   SheetContent,
@@ -107,11 +109,17 @@ export function CartDrawer() {
                           className="h-full w-full object-cover"
                         />
                       ) : (
-                        <ProductGraphic
-                          type="DRINK"
-                          accent={line.accentColor}
-                          className="h-full w-full"
-                        />
+                        <span
+                          className="flex h-full w-full items-end justify-center px-1.5 pb-1.5"
+                          style={bottleBackdrop(line.accentColor)}
+                        >
+                          <AttarBottle
+                            size={bottleSizeOf(line.size) ?? "12"}
+                            accent={line.accentColor}
+                            name={line.name}
+                            className="h-full w-auto"
+                          />
+                        </span>
                       )}
                     </div>
 

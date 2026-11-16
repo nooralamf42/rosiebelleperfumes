@@ -39,6 +39,7 @@ async function main() {
       mood: p.mood,
       benefits: p.benefits,
       ingredients: p.ingredients,
+      sizes: p.sizes,
       stock: p.stock,
       featured: p.featured,
       categoryId: categoryIds[demoCategoryOf(p)],

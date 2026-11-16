@@ -5,12 +5,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { Check, ChevronRight, Droplets, Leaf, Minus, Plus, ShieldCheck, Star, Truck } from "lucide-react";
-import { ProductMedia } from "./product-media";
-import { ProductGraphic } from "./product-graphic";
+import { bottleBackdrop } from "./product-media";
+import { AttarBottle } from "./attar-bottle";
 import { AddToCartButton } from "./add-to-cart-button";
 import { ReviewForm } from "./review-form";
 import { formatPrice, discountPercent } from "@/lib/format";
 import { noteChips, scentProfile } from "@/lib/scent";
+import { bottleSizeOf, bottleSizesOf, compareAtForPrice, priceForSize, productSizes } from "@/lib/sizes";
 import { useSiteSettings } from "@/components/providers/site-settings-provider";
 import type { StoreProduct, ReviewView } from "@/lib/types";
 
@@ -41,10 +42,16 @@ export function ProductDetail({
 }) {
   const [qty, setQty] = useState(1);
   const [active, setActive] = useState(0);
-  const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const sizeList = productSizes(product);
+  // The first size is the default, so the price and bottle are always for a real choice.
+  const [selectedSize, setSelectedSize] = useState<string | null>(sizeList[0]?.label ?? null);
   const [tab, setTab] = useState<"about" | "use" | "safety">("about");
   const images = product.images ?? [];
-  const { commerce } = useSiteSettings();
+  const { commerce, identity } = useSiteSettings();
+  const unitPrice = priceForSize(product, selectedSize);
+  const unitCompare = compareAtForPrice(product, unitPrice);
+  const bottleSizes = bottleSizesOf(product);
+  const shownBottle = bottleSizeOf(selectedSize) ?? bottleSizes[0];
   const shippingNote = [freeShippingText(commerce), commerce.deliveryEstimate && `ships in ${commerce.deliveryEstimate}`]
     .filter(Boolean)
     .join(" · ");
@@ -91,7 +98,26 @@ export function ProductDetail({
                 </motion.div>
               </AnimatePresence>
             ) : (
-              <ProductMedia product={product} priority sizes="(max-width: 1024px) 100vw, 50vw" />
+              <div className="absolute inset-0 flex items-end justify-center px-[10%] pb-[8%]" style={bottleBackdrop(product.accentColor)}>
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.div
+                    key={shownBottle}
+                    initial={{ opacity: 0, y: 18, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.35, ease }}
+                    className="flex h-full w-full items-end justify-center"
+                  >
+                    <AttarBottle
+                      size={shownBottle}
+                      accent={product.accentColor}
+                      name={product.name}
+                      brand={identity.storeName}
+                      className="h-[92%] w-auto drop-shadow-[0_18px_20px_rgba(40,20,10,0.2)]"
+                    />
+                  </motion.div>
+                </AnimatePresence>
+              </div>
             )}
             <div className="pointer-events-none absolute left-4 top-4 flex gap-2">
               {product.mood && (
@@ -102,6 +128,31 @@ export function ProductDetail({
               )}
             </div>
           </div>
+          {images.length === 0 && bottleSizes.length > 1 && (
+            <ul className="mt-3 grid grid-cols-3 gap-2 sm:gap-3">
+              {bottleSizes.map((b) => {
+                const entry = sizeList.find((s) => bottleSizeOf(s.label) === b);
+                const on = shownBottle === b;
+                return (
+                  <li key={b}>
+                    <button
+                      type="button"
+                      onClick={() => entry && setSelectedSize(entry.label)}
+                      aria-label={`Show the ${b} ml bottle`}
+                      aria-pressed={on}
+                      className={`relative flex aspect-square w-full items-end justify-center overflow-hidden rounded-2xl px-3 pb-3 transition-all ${
+                        on ? "ring-2 ring-foreground ring-offset-2 ring-offset-background" : "opacity-65 hover:opacity-100"
+                      }`}
+                      style={bottleBackdrop(product.accentColor)}
+                    >
+                      <AttarBottle size={b} accent={product.accentColor} name={product.name} brand={identity.storeName} className="h-full w-auto" />
+                      <span className="absolute left-2 top-2 rounded-full bg-background/80 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.12em]">{b} ml</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
           {images.length > 1 && (
             <ul className="mt-3 grid grid-cols-5 gap-2 sm:gap-3">
               {images.map((src, i) => (
@@ -135,9 +186,9 @@ export function ProductDetail({
 
           <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2">
             <div className="flex items-baseline gap-3">
-              <span className="font-heading text-2xl">{formatPrice(product.price)}</span>
-              {product.compareAtPrice && (
-                <span className="text-sm text-muted-foreground line-through">{formatPrice(product.compareAtPrice)}</span>
+              <span className="font-heading text-2xl">{formatPrice(unitPrice)}</span>
+              {unitCompare && (
+                <span className="text-sm text-muted-foreground line-through">{formatPrice(unitCompare)}</span>
               )}
             </div>
             {reviews.length > 0 && (
@@ -192,28 +243,33 @@ export function ProductDetail({
             ))}
           </div>
 
-          {product.sizes.length > 0 && (
+          {sizeList.length > 0 && (
             <div className="mt-7">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">
-                  Size {selectedSize && <span className="text-primary">· {selectedSize}</span>}
-                </span>
-                {!selectedSize && <span className="text-xs text-muted-foreground">Select a size</span>}
-              </div>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {product.sizes.map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => setSelectedSize(s)}
-                    className={
-                      "min-w-14 rounded-full border px-4 py-2 text-xs uppercase tracking-[0.1em] transition-colors " +
-                      (selectedSize === s ? "border-primary bg-primary text-primary-foreground" : "border-foreground/15 hover:border-foreground")
-                    }
-                  >
-                    {s}
-                  </button>
-                ))}
+              <p className="text-sm font-medium">Size</p>
+              <div className="mt-2 grid grid-cols-3 gap-2" role="radiogroup" aria-label="Size">
+                {sizeList.map((s) => {
+                  const on = selectedSize === s.label;
+                  return (
+                    <button
+                      key={s.label}
+                      type="button"
+                      role="radio"
+                      aria-checked={on}
+                      onClick={() => setSelectedSize(s.label)}
+                      className={
+                        "rounded-2xl border px-3 py-3 text-center transition-all " +
+                        (on
+                          ? "border-primary bg-primary text-primary-foreground shadow-soft"
+                          : "border-foreground/15 hover:border-foreground")
+                      }
+                    >
+                      <span className="block text-sm font-medium">{s.label}</span>
+                      <span className={"mt-0.5 block text-xs tabular-nums " + (on ? "opacity-85" : "text-muted-foreground")}>
+                        {formatPrice(s.price)}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -241,10 +297,11 @@ export function ProductDetail({
               product={product}
               qty={qty}
               selectedSize={selectedSize}
+              unitPrice={unitPrice}
               size="lg"
               className="h-12 w-full rounded-full text-sm shadow-soft sm:w-auto sm:flex-1 sm:px-10"
             >
-              Add to bag · {formatPrice(product.price * qty)}
+              Add to bag · {formatPrice(unitPrice * qty)}
             </AddToCartButton>
           </div>
 
@@ -254,7 +311,7 @@ export function ProductDetail({
             )}
             <li className="flex items-center gap-2"><ShieldCheck className="size-4 text-primary" strokeWidth={1.7} />GC/MS tested, batch dated</li>
             <li className="flex items-center gap-2"><Leaf className="size-4 text-primary" strokeWidth={1.7} />No synthetic fragrance</li>
-            <li className="flex items-center gap-2"><Droplets className="size-4 text-primary" strokeWidth={1.7} />Amber glass, orifice reducer</li>
+            <li className="flex items-center gap-2"><Droplets className="size-4 text-primary" strokeWidth={1.7} />Glass bottle, screw-top cap</li>
           </ul>
 
           {/* Tabs */}
@@ -331,7 +388,7 @@ export function ProductDetail({
         {reviews.length === 0 && (
           <div className="mt-8 flex items-center gap-4 rounded-3xl border border-dashed border-foreground/15 p-6">
             <div className="relative size-16 shrink-0 overflow-hidden rounded-2xl">
-              <ProductGraphic accent={product.accentColor} label={product.name} className="size-full" />
+              <AttarBottle size="12" accent={product.accentColor} name={product.name} brand={identity.storeName} className="size-full" />
             </div>
             <p className="text-sm text-muted-foreground">No reviews yet. Be the first to tell us how {product.name} found its way into your day.</p>
           </div>
