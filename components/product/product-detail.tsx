@@ -139,7 +139,7 @@ export function ProductDetail({
                     <button
                       type="button"
                       onClick={() => entry && setSelectedSize(entry.label)}
-                      aria-label={`Show the ${b} ml bottle`}
+                      aria-label={`Show the ${b} gm bottle`}
                       aria-pressed={on}
                       className={`relative flex aspect-square w-full items-end justify-center overflow-hidden rounded-2xl px-3 pb-3 transition-all ${
                         on ? "ring-2 ring-foreground ring-offset-2 ring-offset-background" : "opacity-65 hover:opacity-100"
@@ -155,7 +155,7 @@ export function ProductDetail({
                           style={{ height: `${(100 * bottleHeightRatio(b)).toFixed(1)}%` }}
                         />
                       </span>
-                      <span className="absolute left-2 top-2 rounded-full bg-background/80 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.12em]">{b} ml</span>
+                      <span className="absolute left-2 top-2 rounded-full bg-background/80 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.12em]">{b} gm</span>
                     </button>
                   </li>
                 );
@@ -318,8 +318,8 @@ export function ProductDetail({
             {shippingNote && (
               <li className="flex items-center gap-2"><Truck className="size-4 text-primary" strokeWidth={1.7} />{shippingNote}</li>
             )}
-            <li className="flex items-center gap-2"><ShieldCheck className="size-4 text-primary" strokeWidth={1.7} />GC/MS tested, batch dated</li>
-            <li className="flex items-center gap-2"><Leaf className="size-4 text-primary" strokeWidth={1.7} />No synthetic fragrance</li>
+            <li className="flex items-center gap-2"><ShieldCheck className="size-4 text-primary" strokeWidth={1.7} />Packed with care, tracked delivery</li>
+            <li className="flex items-center gap-2"><Leaf className="size-4 text-primary" strokeWidth={1.7} />Choose 12, 6 or 3 gm</li>
             <li className="flex items-center gap-2"><Droplets className="size-4 text-primary" strokeWidth={1.7} />Glass bottle, screw-top cap</li>
           </ul>
 
@@ -364,9 +364,9 @@ export function ProductDetail({
                 )}
                 {tab === "use" && (
                   <p>
-                    <strong className="text-foreground">Diffuse:</strong> 4–6 drops in water, 30–60 minutes at a time.{" "}
-                    <strong className="text-foreground">On skin:</strong> dilute to 1–3% in a carrier oil (6–18 drops per 30 ml) and apply to pulse points.{" "}
-                    <strong className="text-foreground">Bath:</strong> mix 5 drops with a tablespoon of carrier oil before adding to water.
+                    <strong className="text-foreground">Wear it:</strong> a small dab on the wrists, behind the ears or on the neck. It warms and develops on your skin over the first hour.{" "}
+                    <strong className="text-foreground">On clothing:</strong> dab a little on a scarf or the inside of a collar. It lasts for days on fabric, but test a hidden spot first.{" "}
+                    <strong className="text-foreground">Store:</strong> keep the cap closed, in a cool, dark place away from heat.
                   </p>
                 )}
                 {tab === "safety" && (

@@ -29,14 +29,12 @@ const accents = [
 
 type SizeRow = { label: string; price: string };
 
-/** "12 ml=1299" → { label: "12 ml", price: "1299" }; "S" → { label: "S", price: "" }. */
+/** "12 gm=1299" → { label: "12 gm", price: "1299" }; "S" → { label: "S", price: "" }. */
 function rowFromEntry(raw: string): SizeRow {
   const i = raw.lastIndexOf("=");
   return i > 0 ? { label: raw.slice(0, i).trim(), price: raw.slice(i + 1).trim() } : { label: raw.trim(), price: "" };
 }
 
-/** Round to a friendly "…9" rupee price, e.g. 359.4 → 359. */
-const friendly = (n: number) => Math.max(9, Math.round(n / 10) * 10 - 1);
 
 /** Rows of size + price (₹). The first size is the default one. */
 function SizesEditor({ rows, onChange, basePrice }: { rows: SizeRow[]; onChange: (r: SizeRow[]) => void; basePrice: number }) {
@@ -50,7 +48,7 @@ function SizesEditor({ rows, onChange, basePrice }: { rows: SizeRow[]; onChange:
       )}
       {rows.map((r, i) => (
         <div key={i} className="grid grid-cols-[1fr_8rem_auto] items-center gap-2">
-          <Input placeholder="e.g. 12 ml" value={r.label} onChange={(e) => update(i, { label: e.target.value.replace(/[=,]/g, "") })} aria-label="Size name" />
+          <Input placeholder="e.g. 12 gm" value={r.label} onChange={(e) => update(i, { label: e.target.value.replace(/[=,]/g, "") })} aria-label="Size name" />
           <div className="relative">
             <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">₹</span>
             <Input
@@ -80,17 +78,17 @@ function SizesEditor({ rows, onChange, basePrice }: { rows: SizeRow[]; onChange:
           title={presetDisabled ? "Enter the price above first" : undefined}
           onClick={() =>
             onChange([
-              { label: "12 ml", price: String(basePrice) },
-              { label: "6 ml", price: String(friendly(basePrice * 0.6)) },
-              { label: "3 ml", price: String(friendly(basePrice * 0.35)) },
+              { label: "12 gm", price: String(basePrice) },
+              { label: "6 gm", price: String(Math.round(basePrice / 2)) },
+              { label: "3 gm", price: String(Math.round(basePrice / 4)) },
             ])
           }
         >
-          Use 12 / 6 / 3 ml
+          Use 12 / 6 / 3 gm
         </Button>
       </div>
       <p className="text-xs text-muted-foreground">
-        The first size is the default. Leave a price empty to use the product price. Sizes in ml show the matching bottle picture.
+        The first size is the default. Leave a price empty to use the product price. Sizes in gm (or ml) show the matching bottle picture. The preset prices 6 gm at half and 3 gm at a quarter of the 12 gm price.
       </p>
     </div>
   );

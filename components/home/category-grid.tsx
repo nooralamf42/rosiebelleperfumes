@@ -8,29 +8,34 @@ import type { StoreCategory } from "@/lib/categories";
  * Editorial photos per starter category. A category the owner adds later
  * falls back to the next unused photo, so the grid always looks finished.
  */
+const unsplash = (id: string) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=1000&q=80`;
 const PHOTOS: Record<string, { src: string; blurb: string }> = {
-  "pure-oils": {
-    src: "https://images.unsplash.com/photo-1617897903246-719242758050?auto=format&fit=crop&w=1000&q=80",
-    blurb: "One botanical, one origin. The building blocks.",
+  "natural-oils": {
+    src: unsplash("photo-1617897903246-719242758050"),
+    blurb: "Sandalwood, rose, khus and saffron attars.",
   },
-  blends: {
-    src: "https://images.unsplash.com/photo-1612817288484-6f916006741a?auto=format&fit=crop&w=1000&q=80",
-    blurb: "Ready to diffuse. Composed in small batches.",
+  oud: {
+    src: unsplash("photo-1602928321679-560bb453f190"),
+    blurb: "Pure oud from Assam, Cambodia, Laos and beyond.",
   },
-  "carrier-oils": {
-    src: "https://images.unsplash.com/photo-1620916297397-a4a5402a3c6c?auto=format&fit=crop&w=1000&q=80",
-    blurb: "Cold-pressed bases for skin and massage.",
+  mukhallat: {
+    src: unsplash("photo-1612817288484-6f916006741a"),
+    blurb: "Blended attars: Kannauj, oud, Qaboos, sultania.",
   },
-  rituals: {
-    src: "https://images.unsplash.com/photo-1515377905703-c4788e51af15?auto=format&fit=crop&w=1000&q=80",
-    blurb: "Roll-ons, sets and gifts for the daily practice.",
+  musk: {
+    src: unsplash("photo-1620916297397-a4a5402a3c6c"),
+    blurb: "Himalayan, Siberian, Kashmiri and civet musk.",
+  },
+  absolutes: {
+    src: unsplash("photo-1515377905703-c4788e51af15"),
+    blurb: "Rose, jasmine, lotus, ambergris and more.",
   },
 };
 const FALLBACKS = Object.values(PHOTOS);
 
 export function CategoryGrid({ categories }: { categories: StoreCategory[] }) {
   if (categories.length === 0) return null;
-  const items = categories.slice(0, 4).map((c, i) => ({
+  const items = categories.slice(0, 5).map((c, i) => ({
     ...c,
     ...(PHOTOS[c.slug] ?? FALLBACKS[i % FALLBACKS.length]),
   }));
@@ -41,7 +46,7 @@ export function CategoryGrid({ categories }: { categories: StoreCategory[] }) {
         <div>
           <p className="text-eyebrow">Collections</p>
           <h2 className="mt-3 max-w-md text-3xl sm:text-4xl lg:text-5xl">
-            Four ways into <span className="font-display-italic text-amber">the apothecary</span>
+            Five ways into <span className="font-display-italic text-amber">the collection</span>
           </h2>
         </div>
         <Link
@@ -53,7 +58,7 @@ export function CategoryGrid({ categories }: { categories: StoreCategory[] }) {
         </Link>
       </Reveal>
 
-      <StaggerGroup className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4" amount={0.15}>
+      <StaggerGroup className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-5" amount={0.15}>
         {items.map((c, i) => (
           <StaggerItem key={c.slug} className={i % 2 === 1 ? "lg:translate-y-10" : ""}>
             <Link
@@ -64,13 +69,13 @@ export function CategoryGrid({ categories }: { categories: StoreCategory[] }) {
                 src={c.src}
                 alt={c.name}
                 fill
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 20vw"
                 className="object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-110"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent transition-opacity duration-500 group-hover:opacity-90" />
-              <div className="absolute inset-x-0 bottom-0 p-6 text-white">
+              <div className="absolute inset-x-0 bottom-0 p-5 text-white">
                 <p className="text-[10px] uppercase tracking-[0.22em] text-white/70">0{i + 1}</p>
-                <h3 className="mt-2 font-heading text-2xl leading-tight">{c.name}</h3>
+                <h3 className="mt-2 font-heading text-xl leading-tight xl:text-2xl">{c.name}</h3>
                 <p className="mt-2 max-w-[24ch] text-sm text-white/80 opacity-0 transition-all duration-500 [transform:translateY(8px)] group-hover:opacity-100 group-hover:[transform:translateY(0)]">
                   {c.blurb}
                 </p>

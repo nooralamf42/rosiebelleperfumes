@@ -26,11 +26,11 @@ That year turned into a rule we still follow: if we can't trace it, we don't bot
 
 ## What we make
 
-Pure essential oils, small-batch blends and cold-pressed carrier oils. Each one names its botanical, its origin and its batch.
+Natural oils, oud, mukhallat, musk and absolutes, sold by the gram in 12, 6 and 3 gm bottles. Each one is listed by name and, where we know it, its origin.
 
-- **Single origin.** Grown on farms we know, distilled soon after harvest.
-- **Lab tested.** Every batch is GC/MS tested for purity.
-- **Amber glass.** UV-protected bottles, never plastic.
+- **Natural.** Attars, ruh, oud and absolutes, named for what they are.
+- **Sold by the gram.** 12, 6 or 3 gm, so you can start small.
+- **Glass bottles.** Screw-top caps, packed with care.
 
 ![A flat lay of oils, stones and botanicals](${IMG("photo-1612817288484-6f916006741a")})
 
@@ -40,4 +40,4 @@ Pure essential oils, small-batch blends and cold-pressed carrier oils. Each one 
 
 ## Come and smell for yourself
 
-Start with a single oil you already love, then build from there. [Explore the collection](/products) or [write to us](/contact). We read every message.`;
+Start with a 3 gm bottle of something you have never tried, then build from there. [Explore the collection](/products) or [write to us](/contact). We read every message.`;

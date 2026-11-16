@@ -14,19 +14,19 @@ const STEPS = [
   {
     n: "01",
     title: "Choose your note",
-    copy: "Start with a single oil you already love the smell of. Lavender to unwind, peppermint to focus, sweet orange to lift the room.",
+    copy: "Start with a family you already love: sandalwood for calm, rose for romance, khus for cool, oud for depth. Try it in the 3 gm bottle first.",
     src: "https://images.unsplash.com/photo-1617897903246-719242758050?auto=format&fit=crop&w=1200&q=80",
   },
   {
     n: "02",
-    title: "Dilute or diffuse",
-    copy: "Four to six drops in a diffuser, or one to three percent in a carrier oil for skin. Our roll-ons are already diluted, so you can skip the maths.",
+    title: "Wear it your way",
+    copy: "A small dab on the wrists, neck or clothing is plenty. These oils are concentrated, so start with a little and let it bloom on your skin.",
     src: "https://images.unsplash.com/photo-1515377905703-c4788e51af15?auto=format&fit=crop&w=1200&q=80",
   },
   {
     n: "03",
     title: "Make it a practice",
-    copy: "Same oil, same time, every day. Within a week the scent itself becomes the cue your body answers to.",
+    copy: "Same oil, every day. Within a week the scent becomes yours, and the people around you start to know you by it.",
     src: "https://images.unsplash.com/photo-1611073615830-9f76902c10fe?auto=format&fit=crop&w=1200&q=80",
   },
 ];

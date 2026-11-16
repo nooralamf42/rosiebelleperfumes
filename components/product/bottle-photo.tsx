@@ -4,7 +4,7 @@ import type { BottleSize } from "@/lib/sizes";
 import { cn } from "@/lib/utils";
 
 /*
- * Product bottle pictures. One real studio photo of the 12, 6 and 3 ml bottles
+ * Product bottle pictures. One real studio photo of the 12, 6 and 3 gm bottles
  * (blank labels) is cut out and recoloured for every perfume colour by
  * scripts/build-bottle-photos.ts, so a perfume's bottle matches its colour.
  * The name, brand and place are printed onto the blank label here, in code,
@@ -17,7 +17,7 @@ type Single = { w: number; h: number; label: Rect; heightPx: number };
 const SINGLE = layout.single as Record<BottleSize, Single>;
 const TALLEST = SINGLE["12"].heightPx;
 
-/** How tall a bottle is compared with the 12 ml one (1, ~0.86, ~0.71). */
+/** How tall a bottle is compared with the 12 gm one (1, ~0.86, ~0.71). */
 export const bottleHeightRatio = (size: BottleSize) => SINGLE[size].heightPx / TALLEST;
 
 type LabelProps = { name?: string; brand?: string; origin?: string };
@@ -53,7 +53,7 @@ function LabelText({ rect, name = "", brand = "Rosiebelle Perfumes", origin = "K
 
 /**
  * One bottle. Give it a height (it keeps its own proportions) or a width.
- * `scaled` sizes it relative to the 12 ml bottle, for showing sizes together.
+ * `scaled` sizes it relative to the 12 gm bottle, for showing sizes together.
  */
 export function BottlePhoto({
   size = "12",
@@ -72,7 +72,7 @@ export function BottlePhoto({
       className={cn("relative shrink-0", className)}
       style={{ aspectRatio: `${s.w} / ${s.h}`, ...style }}
       role="img"
-      aria-label={name ? `${name}, ${size} ml bottle` : `${size} ml bottle`}
+      aria-label={name ? `${name}, ${size} gm bottle` : `${size} gm bottle`}
     >
       {/* Plain <img>: the files are already small webp cut-outs. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -93,7 +93,7 @@ export function BottlePhoto({
 
 /**
  * Several sizes standing in a row, bottoms aligned and heights true to life
- * (12 ml tallest). Fits itself inside its parent: give the parent a size.
+ * (12 gm tallest). Fits itself inside its parent: give the parent a size.
  */
 export function BottleRow({
   sizes,

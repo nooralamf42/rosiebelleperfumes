@@ -4,7 +4,7 @@
  *   npx tsx scripts/build-bottle-photos.ts
  *
  * Source: scripts/assets/bottles-source.webp, a studio photo of the 12, 6 and
- * 3 ml bottles with BLANK labels on a white background (generated from the
+ * 3 gm bottles with BLANK labels on a white background (generated from the
  * Rosiebelle reference photo). The script:
  *   1. cuts the bottles out of the white background (transparent webp),
  *   2. finds the blank label on each bottle (so the site can print the real

@@ -5,7 +5,7 @@ import type { StoreProduct } from "./types";
  *
  * Sizes are stored as plain strings in the existing `sizes` field, so no
  * database change is needed. An entry is either just a label ("2.4") or a
- * label with a price in rupees ("12 ml=1299"). Entries without a price use
+ * label with a price in rupees ("12 gm=1299"). Entries without a price use
  * the product's own price. The first size is the default one, and the
  * product's own price should match it.
  */
@@ -20,7 +20,7 @@ export type BottleSize = "12" | "6" | "3";
 
 type SizedProduct = Pick<StoreProduct, "sizes" | "price">;
 
-/** "12 ml=1299" → { label: "12 ml", price: 129900 }. */
+/** "12 gm=1299" → { label: "12 gm", price: 129900 }. */
 export function parseSizeEntry(raw: string, fallbackPrice: number): ProductSize {
   const i = raw.lastIndexOf("=");
   if (i > 0) {
@@ -71,15 +71,15 @@ export function compareAtForPrice(p: Pick<StoreProduct, "price" | "compareAtPric
   return Math.round((unitPrice * p.compareAtPrice) / p.price / 100) * 100;
 }
 
-/** "12 ml" → "12", "6ML" → "6", anything else → null. */
+/** "12 gm" or "12 ml" → "12", "6g" → "6", anything else → null. Picks the bottle picture. */
 export function bottleSizeOf(label: string | null | undefined): BottleSize | null {
-  const m = (label ?? "").match(/(\d+(?:\.\d+)?)\s*ml/i);
+  const m = (label ?? "").match(/(\d+(?:\.\d+)?)\s*(?:ml|gm|g)\b/i);
   if (!m) return null;
   const n = Math.round(Number(m[1]));
   return n >= 9 ? "12" : n >= 5 ? "6" : "3";
 }
 
-/** Bottle sizes a product comes in, largest first. Defaults to a single 12 ml bottle. */
+/** Bottle sizes a product comes in, largest first. Defaults to a single 12 gm bottle. */
 export function bottleSizesOf(p: Pick<StoreProduct, "sizes">): BottleSize[] {
   const found = new Set<BottleSize>();
   for (const raw of p.sizes) {
@@ -90,7 +90,7 @@ export function bottleSizesOf(p: Pick<StoreProduct, "sizes">): BottleSize[] {
   return ordered.length ? ordered : ["12"];
 }
 
-/** Raw entry for the admin editor: ("12 ml", 1299) → "12 ml=1299". */
+/** Raw entry for the admin editor: ("12 gm", 1299) → "12 gm=1299". */
 export function formatSizeEntry(label: string, rupees: number | string): string {
   const r = Number(rupees);
   return Number.isFinite(r) && r > 0 ? `${label.trim()}=${r}` : label.trim();

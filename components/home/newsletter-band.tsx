@@ -9,10 +9,10 @@ export function NewsletterBand() {
           <div>
             <p className="text-eyebrow">The dispatch</p>
             <h2 className="mt-3 text-3xl sm:text-4xl">
-              Seasonal blends, <span className="font-display-italic text-amber">before anyone else</span>
+              New arrivals, <span className="font-display-italic text-amber">before anyone else</span>
             </h2>
             <p className="mt-3 max-w-md text-muted-foreground">
-              One letter a month: what we&apos;re distilling, how to use it, and 10% off your first order.
+              One letter a month: rare batches, new arrivals, and 10% off your first order.
             </p>
           </div>
           <div className="lg:justify-self-end">

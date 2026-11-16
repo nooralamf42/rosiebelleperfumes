@@ -1,364 +1,187 @@
 import type { StoreProduct } from "./types";
 
 /*
- * Starter catalogue: 16 essential-oil products across four categories.
- * Used as the demo catalogue when no database is configured, and by
- * `prisma/seed.ts` to populate a fresh store. Images are intentionally empty
- * so the illustrated amber bottle is shown until real photos are uploaded
- * in Admin → Products.
+ * Rosiebelle catalogue: five categories, priced per 6 gm.
  *
- *   type DRINK  → Pure essential oils (single botanicals)
- *   type GUMMY  → Signature blends
- *   type BUNDLE → Carrier oils (slug-mapped) and ritual sets
+ * Every product is sold in three sizes: 6 gm at the listed price, 12 gm at
+ * double it and 3 gm at half. The 12 gm price is the product's own price
+ * (the default size). This file is used as the demo catalogue when no
+ * database is configured, and by prisma/seed.ts to fill a fresh store.
+ *
+ * Row format:  [name, price for 6 gm in rupees, bottle colour, scent family, scent notes, description]
+ * A price of null means "not priced yet": it gets TEST_PRICE so it can still
+ * be ordered while you set the real figure in Admin > Products.
  */
-const rawDemoProducts: Omit<StoreProduct, "sizes">[] = [
-  // ---- Pure essential oils ----
-  {
-    id: "demo-lavender",
-    name: "Lavender",
-    slug: "lavender-essential-oil",
-    tagline: "Lavandula angustifolia · Bulgaria",
-    description:
-      "Steam-distilled from high-altitude Bulgarian lavender, this is the oil most people reach for first: soft, powdery and quietly floral. A few drops on a pillow or in the diffuser before bed is the whole ritual.",
-    type: "DRINK",
-    price: 59900,
-    compareAtPrice: 74900,
-    images: [],
-    accentColor: "brand-lavender",
-    flavor: "Lavender, soft herb, faint honey",
-    mood: "Calm",
-    benefits: ["100% pure, single origin", "Steam distilled", "GC/MS tested", "12, 6 or 3 ml glass bottle"],
-    ingredients: "Lavandula angustifolia (lavender) flower oil. For aromatic and diluted topical use. Keep away from eyes.",
-    stock: 120,
-    featured: true,
-  },
-  {
-    id: "demo-peppermint",
-    name: "Peppermint",
-    slug: "peppermint-essential-oil",
-    tagline: "Mentha piperita · India",
-    description:
-      "Cold, bright and immediately awake. Our peppermint is grown in the Uttar Pradesh plains and distilled within hours of harvest, which is why the menthol hit is this clean.",
-    type: "DRINK",
-    price: 49900,
-    compareAtPrice: null,
-    images: [],
-    accentColor: "brand-mint",
-    flavor: "Peppermint, cool mint, green",
-    mood: "Focus",
-    benefits: ["100% pure", "Steam distilled", "High menthol", "12, 6 or 3 ml glass bottle"],
-    ingredients: "Mentha piperita (peppermint) oil. Dilute before applying to skin. Not for children under 6.",
-    stock: 90,
-    featured: true,
-  },
-  {
-    id: "demo-tea-tree",
-    name: "Tea Tree",
-    slug: "tea-tree-essential-oil",
-    tagline: "Melaleuca alternifolia · Australia",
-    description:
-      "Sharp, medicinal and honest. Tea tree is the one to keep in the bathroom cabinet: a drop in a face steam, a dab on a blemish, a capful in the mop bucket.",
-    type: "DRINK",
-    price: 54900,
-    compareAtPrice: 64900,
-    images: [],
-    accentColor: "brand-sky",
-    flavor: "Tea tree, camphor, fresh green",
-    mood: "Clarify",
-    benefits: ["100% pure", "Terpinen-4-ol rich", "GC/MS tested", "12, 6 or 3 ml glass bottle"],
-    ingredients: "Melaleuca alternifolia (tea tree) leaf oil. External use only; patch test first.",
-    stock: 110,
-    featured: false,
-  },
-  {
-    id: "demo-sweet-orange",
-    name: "Sweet Orange",
-    slug: "sweet-orange-essential-oil",
-    tagline: "Citrus sinensis · Brazil",
-    description:
-      "Cold-pressed from the peel, which is exactly what it smells like: a just-peeled orange on a sunny counter. The cheerful one. Pairs with everything.",
-    type: "DRINK",
-    price: 39900,
-    compareAtPrice: null,
-    images: [],
-    accentColor: "brand-tangerine",
-    flavor: "Orange peel, sweet citrus, zest",
-    mood: "Uplift",
-    benefits: ["100% pure", "Cold pressed", "Food-grade peel", "12, 6 or 3 ml glass bottle"],
-    ingredients: "Citrus sinensis (sweet orange) peel oil. Mildly photosensitising; avoid sun after topical use.",
-    stock: 150,
-    featured: true,
-  },
-  {
-    id: "demo-eucalyptus",
-    name: "Eucalyptus",
-    slug: "eucalyptus-essential-oil",
-    tagline: "Eucalyptus globulus · Nilgiris",
-    description:
-      "Grown in the blue hills of the Nilgiris. Camphorous and clearing, it is the oil for a steamy shower on a heavy-headed morning.",
-    type: "DRINK",
-    price: 44900,
-    compareAtPrice: null,
-    images: [],
-    accentColor: "brand-mint",
-    flavor: "Eucalyptus, camphor, cool green",
-    mood: "Breathe",
-    benefits: ["100% pure", "Steam distilled", "High cineole", "12, 6 or 3 ml glass bottle"],
-    ingredients: "Eucalyptus globulus leaf oil. Not for children under 10. Dilute before topical use.",
-    stock: 80,
-    featured: false,
-  },
-  {
-    id: "demo-frankincense",
-    name: "Frankincense",
-    slug: "frankincense-essential-oil",
-    tagline: "Boswellia serrata · Rajasthan",
-    description:
-      "Resinous, slightly lemony, deeply still. Indian frankincense has been burned in temples for three thousand years; this is that scent, without the smoke.",
-    type: "DRINK",
-    price: 99900,
-    compareAtPrice: 119900,
-    images: [],
-    accentColor: "brand-grape",
-    flavor: "Resin, soft lemon, dry wood",
-    mood: "Ground",
-    benefits: ["100% pure", "Wild-harvested resin", "Steam distilled", "12, 6 or 3 ml glass bottle"],
-    ingredients: "Boswellia serrata (frankincense) resin oil. For aromatic and diluted topical use.",
-    stock: 45,
-    featured: true,
-  },
-  // ---- Signature blends ----
-  {
-    id: "demo-blend-deep-sleep",
-    name: "Deep Sleep",
-    slug: "deep-sleep-blend",
-    tagline: "Lavender · Cedarwood · Roman chamomile",
-    description:
-      "Our most-ordered blend. Lavender does the soothing, cedarwood adds a warm wooden floor to lie on, and a whisper of chamomile makes it feel like the end of the day.",
-    type: "GUMMY",
-    price: 79900,
-    compareAtPrice: 89900,
-    images: [],
-    accentColor: "brand-lavender",
-    flavor: "Lavender, cedarwood, chamomile",
-    mood: "Sleep",
-    benefits: ["Diffuser-ready blend", "No synthetic fragrance", "Blended in small batches", "12, 6 or 3 ml glass bottle"],
-    ingredients: "Lavandula angustifolia, Cedrus atlantica, Anthemis nobilis oils.",
-    stock: 70,
-    featured: true,
-  },
-  {
-    id: "demo-blend-morning-light",
-    name: "Morning Light",
-    slug: "morning-light-blend",
-    tagline: "Bergamot · Grapefruit · Rosemary",
-    description:
-      "Bright citrus with a green, herbal edge that keeps it from turning into candy. Diffuse while the kettle boils.",
-    type: "GUMMY",
-    price: 74900,
-    compareAtPrice: null,
-    images: [],
-    accentColor: "brand-lemon",
-    flavor: "Bergamot, grapefruit, rosemary",
-    mood: "Energise",
-    benefits: ["Diffuser-ready blend", "No synthetic fragrance", "Blended in small batches", "12, 6 or 3 ml glass bottle"],
-    ingredients: "Citrus bergamia, Citrus paradisi, Rosmarinus officinalis oils. Photosensitising.",
-    stock: 65,
-    featured: true,
-  },
-  {
-    id: "demo-blend-clear-head",
-    name: "Clear Head",
-    slug: "clear-head-blend",
-    tagline: "Eucalyptus · Peppermint · Lemon",
-    description:
-      "The blend for monsoon colds and long desk days. Cool, sharp and clean, with lemon to lift the whole thing.",
-    type: "GUMMY",
-    price: 69900,
-    compareAtPrice: 79900,
-    images: [],
-    accentColor: "brand-sky",
-    flavor: "Eucalyptus, peppermint, lemon",
-    mood: "Breathe",
-    benefits: ["Diffuser-ready blend", "No synthetic fragrance", "Blended in small batches", "12, 6 or 3 ml glass bottle"],
-    ingredients: "Eucalyptus globulus, Mentha piperita, Citrus limon oils. Not for young children.",
-    stock: 60,
-    featured: false,
-  },
-  {
-    id: "demo-blend-temple",
-    name: "Temple",
-    slug: "temple-blend",
-    tagline: "Frankincense · Sandalwood · Vetiver",
-    description:
-      "Resin, sacred wood and damp earth. Meditative and slow, this is the blend we reach for on Sunday evenings.",
-    type: "GUMMY",
-    price: 129900,
-    compareAtPrice: null,
-    images: [],
-    accentColor: "brand-peach",
-    flavor: "Frankincense, sandalwood, vetiver",
-    mood: "Ground",
-    benefits: ["Diffuser-ready blend", "Mysore sandalwood", "Blended in small batches", "12, 6 or 3 ml glass bottle"],
-    ingredients: "Boswellia serrata, Santalum album, Vetiveria zizanioides oils.",
-    stock: 30,
-    featured: true,
-  },
-  // ---- Carrier oils ----
-  {
-    id: "demo-jojoba",
-    name: "Golden Jojoba",
-    slug: "golden-jojoba-carrier-oil",
-    tagline: "Simmondsia chinensis · Cold pressed",
-    description:
-      "Technically a liquid wax, which is why it sits so lightly on skin and never goes rancid. The ideal base for diluting any essential oil for face or body.",
-    type: "BUNDLE",
-    price: 64900,
-    compareAtPrice: null,
-    images: [],
-    accentColor: "brand-lemon",
-    flavor: "Unscented, light, non-greasy",
-    mood: "Dilute",
-    benefits: ["Cold pressed, unrefined", "Non-comedogenic", "Long shelf life", "12, 6 or 3 ml glass bottle"],
-    ingredients: "Simmondsia chinensis (jojoba) seed oil.",
-    stock: 85,
-    featured: false,
-  },
-  {
-    id: "demo-sweet-almond",
-    name: "Sweet Almond",
-    slug: "sweet-almond-carrier-oil",
-    tagline: "Prunus dulcis · Cold pressed",
-    description:
-      "Soft, nourishing and faintly nutty. The classic massage base: it glides for a long time and leaves skin feeling fed, not coated.",
-    type: "BUNDLE",
-    price: 44900,
-    compareAtPrice: 54900,
-    images: [],
-    accentColor: "brand-peach",
-    flavor: "Faintly nutty, soft, nourishing",
-    mood: "Massage",
-    benefits: ["Cold pressed", "Rich in vitamin E", "Massage base", "12, 6 or 3 ml glass bottle"],
-    ingredients: "Prunus amygdalus dulcis (sweet almond) oil. Contains tree nuts.",
-    stock: 95,
-    featured: false,
-  },
-  {
-    id: "demo-fractionated-coconut",
-    name: "Fractionated Coconut",
-    slug: "fractionated-coconut-carrier-oil",
-    tagline: "Cocos nucifera · Stays liquid",
-    description:
-      "Coconut oil with the heavy fats removed, so it stays clear and liquid in any weather and absorbs in seconds. Our roll-ons are built on it.",
-    type: "BUNDLE",
-    price: 39900,
-    compareAtPrice: null,
-    images: [],
-    accentColor: "brand-sky",
-    flavor: "Odourless, clear, fast-absorbing",
-    mood: "Dilute",
-    benefits: ["Odourless", "Never solidifies", "Roll-on base", "12, 6 or 3 ml glass bottle"],
-    ingredients: "Caprylic/capric triglyceride (fractionated coconut oil).",
-    stock: 100,
-    featured: false,
-  },
-  // ---- Ritual sets & roll-ons ----
-  {
-    id: "demo-set-starter",
-    name: "The Starter Six",
-    slug: "starter-six-set",
-    tagline: "Six 5 ml essentials in a linen box",
-    description:
-      "Lavender, peppermint, tea tree, sweet orange, eucalyptus and frankincense in 5 ml bottles, plus a guide to blending them. Where almost everyone begins.",
-    type: "BUNDLE",
-    price: 149900,
-    compareAtPrice: 189900,
-    images: [],
-    accentColor: "brand-tangerine",
-    flavor: "Six single oils, 5 ml each",
-    mood: "Gift",
-    benefits: ["6 × 5 ml pure oils", "Linen gift box", "Blending guide", "Saves ₹400"],
-    ingredients: "See each oil for botanical names and cautions.",
-    stock: 40,
-    featured: true,
-  },
-  {
-    id: "demo-rollon-calm",
-    name: "Calm Roll-on",
-    slug: "calm-roll-on",
-    tagline: "Pre-diluted · Ready for pulse points",
-    description:
-      "Deep Sleep blend, already diluted to 5% in fractionated coconut oil, in a steel roller. Wrists, temples, the back of the neck.",
-    type: "BUNDLE",
-    price: 49900,
-    compareAtPrice: null,
-    images: [],
-    accentColor: "brand-berry",
-    flavor: "Lavender, cedarwood, chamomile",
-    mood: "Calm",
-    benefits: ["Pre-diluted 5%", "Steel roller ball", "Travel size", "12, 6 or 3 ml glass bottle"],
-    ingredients: "Caprylic/capric triglyceride, lavender, cedarwood and chamomile oils.",
-    stock: 75,
-    featured: false,
-  },
-  {
-    id: "demo-rollon-focus",
-    name: "Focus Roll-on",
-    slug: "focus-roll-on",
-    tagline: "Pre-diluted · Ready for pulse points",
-    description:
-      "Rosemary, peppermint and lemon at a skin-safe dilution. Keep it beside the laptop.",
-    type: "BUNDLE",
-    price: 49900,
-    compareAtPrice: null,
-    images: [],
-    accentColor: "brand-cherry",
-    flavor: "Rosemary, peppermint, lemon",
-    mood: "Focus",
-    benefits: ["Pre-diluted 5%", "Steel roller ball", "Travel size", "12, 6 or 3 ml glass bottle"],
-    ingredients: "Caprylic/capric triglyceride, rosemary, peppermint and lemon oils.",
-    stock: 75,
-    featured: false,
-  },
-];
 
-/** Round to a friendly "…9" rupee price, e.g. 359.4 → 359. */
-const friendly = (n: number) => Math.max(9, Math.round(n / 10) * 10 - 1);
+export const TEST_PRICE = 9000; // rupees per 6 gm, placeholder for unpriced items
 
-/**
- * Every perfume comes in three bottle sizes with their own prices: the listed
- * price is the 12 ml bottle, 6 ml is about 60% of it and 3 ml about 35%.
- * Gift sets are sold as one size.
- */
-export function bottleSizeEntries(price: number): string[] {
-  const rupees = Math.round(price / 100);
-  return [`12 ml=${rupees}`, `6 ml=${friendly(rupees * 0.6)}`, `3 ml=${friendly(rupees * 0.35)}`];
-}
+type Row = [name: string, price6: number | null, accent: string, family: string, notes: string, desc: string];
 
-export const demoProducts: StoreProduct[] = rawDemoProducts.map((p) => ({
-  ...p,
-  sizes: p.slug.endsWith("-set") ? [] : bottleSizeEntries(p.price),
-}));
-
-/** Category each demo product belongs to (also used by prisma/seed.ts). */
 export const DEMO_CATEGORIES = [
-  { slug: "pure-oils", name: "Pure Essential Oils" },
-  { slug: "blends", name: "Signature Blends" },
-  { slug: "carrier-oils", name: "Carrier Oils" },
-  { slug: "rituals", name: "Rituals & Roll-ons" },
+  { slug: "natural-oils", name: "Natural Oils" },
+  { slug: "oud", name: "Oud" },
+  { slug: "mukhallat", name: "Mukhallat" },
+  { slug: "musk", name: "Musk" },
+  { slug: "absolutes", name: "Absolutes" },
 ] as const;
 
 export type DemoCategorySlug = (typeof DEMO_CATEGORIES)[number]["slug"];
 
-export function demoCategoryOf(p: Pick<StoreProduct, "type" | "slug">): DemoCategorySlug {
-  if (p.type === "DRINK") return "pure-oils";
-  if (p.type === "GUMMY") return "blends";
-  return p.slug.includes("carrier") ? "carrier-oils" : "rituals";
+const CATALOGUE: Record<DemoCategorySlug, Row[]> = {
+  "natural-oils": [
+    ["Shamamatul Oud", 2200, "brand-cherry", "Spicy", "Oud, saffron, warm spice", "A deep shamama built on oud: warm, spicy and long-lasting, in the classic Kannauj style."],
+    ["Shamama Premium", 2000, "brand-peach", "Spicy", "Herbal, warm, resinous", "A premium shamama: dark, resinous and gently sweet, with saffron and spice."],
+    ["Shamama Taj", 1500, "brand-tangerine", "Spicy", "Sweet, spicy, warm", "A lighter shamama with a sweet, spiced warmth. An easy everyday attar."],
+    ["Mysore Sandalwood (Fresh)", 1500, "brand-lemon", "Woody", "Sandalwood, creamy, soft", "Fresh Mysore sandalwood oil: soft, creamy and woody, with a gentle sweetness."],
+    ["Mysore Batch 2012", 1600, "brand-peach", "Woody", "Sandalwood, creamy, aged", "Aged Mysore sandalwood from the 2012 batch. Rounder and deeper than fresh oil."],
+    ["Mysore Batch 2010", 2000, "brand-peach", "Woody", "Sandalwood, smooth, aged", "Aged Mysore sandalwood from the 2010 batch. Smooth, rich and long-lasting."],
+    ["Mysore Batch 1982", 2500, "brand-peach", "Woody", "Sandalwood, deep, aged", "A long-aged Mysore sandalwood from the 1982 batch. Deep, smooth and richly woody."],
+    ["Mysore Batch 1990", 2599, "brand-peach", "Woody", "Sandalwood, deep, aged", "Aged Mysore sandalwood from the 1990 batch. Full-bodied, creamy and warm."],
+    ["Australian Sandalwood", 1000, "brand-lemon", "Woody", "Sandalwood, clean, soft", "A clean, soft sandalwood. Lighter on the nose and kinder on the budget than Mysore."],
+    ["Sandali Zafran", 2000, "brand-tangerine", "Woody", "Sandalwood, saffron", "Sandalwood oil with saffron: creamy wood warmed by a honeyed, leathery spice."],
+    ["Ruh Zafran", 2800, "brand-tangerine", "Spicy", "Saffron, honeyed, leathery", "Pure saffron attar: rich, honeyed and leathery."],
+    ["Zafran Patti (Saffron Stigma)", 2200, "brand-tangerine", "Spicy", "Saffron, golden, warm", "Made from saffron stigma (zafran patti). Deep, golden and warm."],
+    ["Sandali Gulab", 1500, "brand-berry", "Rose", "Rose, sandalwood, creamy", "Sandalwood with rose: soft, creamy and romantic."],
+    ["Sandali Motia", 1500, "brand-lemon", "Floral", "Jasmine, sandalwood, creamy", "Sandalwood with motia (jasmine): creamy wood with a sweet white-floral lift."],
+    ["Sandali Mitti", 1500, "brand-peach", "Earthy", "Earthy, sandalwood, rain", "Sandalwood with mitti (baked earth): the smell of the first rain on dry ground."],
+    ["Sandali Mehndi (Henna)", 1000, "brand-mint", "Earthy", "Green, earthy, sweet", "Sandalwood with mehndi (henna): green, earthy and softly sweet."],
+    ["Red Rose Oil", 4500, "brand-cherry", "Rose", "Rose, deep, velvety", "Red rose oil (Rosa indica): deep, velvety and classic rose."],
+    ["Pink Rose Oil", 9500, "brand-berry", "Rose", "Rose, fresh, sweet", "Pink rose oil (Rosa damascena): bright, sweet and fresh-cut."],
+    ["Afghani Rose Oil", 11000, "brand-berry", "Rose", "Rose, full, spicy", "Afghani rose oil (Rose Muhammadi): fuller and spicier than damascena."],
+    ["Taif Rose Oil", 20500, "brand-cherry", "Rose", "Rose, honeyed, complex", "Taif rose oil: among the most prized roses. Deep, honeyed and complex."],
+    ["Azerbaijan Rose Oil", 10000, "brand-berry", "Rose", "Rose, green, dewy", "Azerbaijan rose oil: a fresh, slightly green and dewy rose."],
+    ["Ruh Motia (Kannauj)", 9500, "brand-lemon", "Floral", "Jasmine, creamy, heady", "Motia (jasmine) ruh from Kannauj: rich, creamy and heady white floral."],
+    ["Ruh Motia (Hasayan)", 7200, "brand-lemon", "Floral", "Jasmine, sweet, soft", "Motia ruh in the hasayan quality: a sweeter, softer white floral."],
+    ["Ruh Khus (Kannauj)", 700, "brand-mint", "Earthy", "Khus, cool, green", "Khus (vetiver) ruh from Kannauj: cool, earthy and green, like wet soil."],
+    ["Ruh Khus (Hasayan)", 850, "brand-mint", "Earthy", "Khus, cooling, smooth", "Khus ruh in the hasayan quality: cooling, earthy and smooth."],
+    ["Munjadh Khus (Hasayan)", 1000, "brand-mint", "Smoky", "Khus, deep, smoky", "Munjadh khus in the hasayan quality: a deeper, darker, smokier khus."],
+  ],
+  oud: [
+    ["Assami Oud 1st Grade", 8000, "brand-cherry", "Oud", "Oud, sweet, woody", "First-grade Assam oud: deep, sweet and woody with a smooth, long finish."],
+    ["Dehnul Oud Seufi", 6000, "brand-peach", "Oud", "Oud, smooth, refined", "Dehnul oud (seufi): smooth, balanced and refined."],
+    ["Laos Oud Pure", 8000, "brand-grape", "Oud", "Oud, fruity, sweet", "Pure Laos oud: sweet, fruity and rounded."],
+    ["Oud Tarat Thai", 8000, "brand-peach", "Oud", "Oud, woody, leathery", "Thai oud: woody and slightly leathery with a sweet finish."],
+    ["Combodi King", 9500, "brand-cherry", "Oud", "Oud, sweet, honeyed", "Cambodi oud, king grade: rich, sweet and honeyed."],
+    ["Combodi Moattaq", 20000, "brand-grape", "Oud", "Oud, aged, rich", "Aged (moattaq) Cambodi oud: deep, smooth and extremely long-lasting."],
+    ["Silani Underwater", 25000, "brand-sky", "Oud", "Oud, damp wood, rare", "Silani underwater oud: a rare oud with a smooth, damp-wood character."],
+    ["Kalakassi Oud 1st Grade", 10500, "brand-cherry", "Oud", "Oud, dark, bold", "First-grade Kalakassi oud: dark, bold and intense."],
+    ["Manipur Oud", 11000, "brand-peach", "Oud", "Oud, sweet, woody", "Manipur oud: sweet, woody and gently animalic."],
+    ["Nagaland Oud 1999 Batch", null, "brand-grape", "Oud", "Oud, aged, deep", "A Nagaland oud from the 1999 batch: aged, smooth and deep."],
+  ],
+  mukhallat: [
+    ["Kiswat Al Kabah", 3000, "brand-grape", "Floral", "Floral, musky, resinous", "A revered Arabian mukhallat: rich, floral, musky and resinous."],
+    ["Mukhallat Kannauj", 400, "brand-peach", "Floral", "Floral, woody, soft", "A classic Kannauj blend of florals and woods. Soft, smooth and easy to wear."],
+    ["Mukhallat Oud", 1000, "brand-cherry", "Oud", "Oud, spicy, amber", "A blend built around oud, with warm spices and amber."],
+    ["Mukhallat Qaboos", 700, "brand-peach", "Sweet", "Woody, sweet, resinous", "A smooth, sweet and resinous blend."],
+    ["Mukhallat Sultania", 900, "brand-lavender", "Floral", "Floral, musky, rich", "A regal floral and musky blend with a rich, lasting trail."],
+  ],
+  musk: [
+    ["Himalayan Musk Oil", 5200, "brand-peach", "Musky", "Musk, warm, animalic", "Himalayan musk oil: deep, warm and animalic with a smooth, clinging finish."],
+    ["Siberian Musk Oil", 5000, "brand-lavender", "Musky", "Musk, powdery, soft", "Siberian musk oil: a soft, powdery, long-lasting musk."],
+    ["Kashmiri Musk Oil", 5000, "brand-grape", "Musky", "Musk, sweet, creamy", "Kashmiri musk oil: a sweet, rounded musk with a creamy warmth."],
+    ["Civet Musk Absolute", 3400, "brand-cherry", "Musky", "Animalic, sweet, rich", "Civet musk absolute: intensely rich and animalic. A touch adds depth to any blend."],
+  ],
+  absolutes: [
+    ["Rose Absolute (Rosa Indica)", 5400, "brand-berry", "Rose", "Rose, rich, deep", "Rose absolute from Rosa indica: rich, deep and full-bodied."],
+    ["Rose Absolute CG (Centifolia)", 1800, "brand-berry", "Rose", "Rose, honeyed, soft", "Rose absolute from Rosa centifolia: honeyed, soft and rounded."],
+    ["Jasmine Auriculatum", 1600, "brand-lemon", "Floral", "Jasmine, sweet, fruity", "Jasmine auriculatum absolute: sweet, fruity and bright."],
+    ["Jasmine Sambac", 3500, "brand-lemon", "Floral", "Jasmine, heady, rich", "Jasmine sambac absolute: heady, rich and intensely floral."],
+    ["Jasmine Grandiflorum", 2600, "brand-lemon", "Floral", "Jasmine, green, sweet", "Jasmine grandiflorum absolute: sweet with a green, fresh edge."],
+    ["Black Ambergris Absolute", 2400, "brand-grape", "Sweet", "Ambergris, marine, sweet", "Black ambergris absolute: warm, marine and softly sweet."],
+    ["Castoreum Absolute", 2400, "brand-peach", "Smoky", "Leathery, animalic, warm", "Castoreum absolute: leathery, warm and animalic."],
+    ["Frankincense Absolute", 700, "brand-lemon", "Resinous", "Resinous, lemony, clean", "Frankincense absolute: resinous, lemony and calm."],
+    ["Labdanum Absolute", 650, "brand-peach", "Resinous", "Amber, resinous, sweet", "Labdanum absolute: amber, resinous and sweet."],
+    ["Benzoin Siam Absolute", 500, "brand-tangerine", "Sweet", "Vanilla, balsamic, sweet", "Benzoin Siam absolute: vanilla-like, balsamic and sweet."],
+    ["Coffee Absolute", 700, "brand-peach", "Sweet", "Roasted, bittersweet", "Coffee absolute: roasted, rich and bittersweet."],
+    ["Cannabis (Hemp) Absolute", 3000, "brand-mint", "Earthy", "Green, herbal, resinous", "Cannabis (hemp) absolute: green, herbal and resinous."],
+    ["Birch Tar Absolute", 400, "brand-grape", "Smoky", "Smoky, leathery, dark", "Birch tar absolute: smoky, leathery and dark."],
+    ["Tobacco Absolute", 1600, "brand-peach", "Sweet", "Tobacco, sweet, hay", "Tobacco absolute: sweet, dry and hay-like."],
+    ["Red Champaca Absolute", 4000, "brand-tangerine", "Floral", "Floral, fruity, rich", "Red champaca absolute: rich, fruity and floral."],
+    ["Frangipani Absolute", 4800, "brand-lemon", "Floral", "Floral, creamy, sweet", "Frangipani absolute: creamy, sweet and tropical."],
+    ["Cade Absolute", 2400, "brand-grape", "Smoky", "Smoky, woody, dark", "Cade absolute: smoky, woody and dark."],
+    ["Tonka Bean Absolute", 4000, "brand-tangerine", "Sweet", "Sweet, almond, vanilla", "Tonka bean absolute: sweet, creamy, with almond and vanilla tones."],
+    ["Blue Lotus Absolute", 1800, "brand-sky", "Floral", "Floral, watery, soft", "Blue lotus absolute: soft, watery and gently floral."],
+    ["White Lotus Absolute", 3000, "brand-lavender", "Floral", "Floral, fresh, clean", "White lotus absolute: fresh, clean and delicate."],
+    ["Pink Lotus Absolute", 2600, "brand-berry", "Floral", "Floral, delicate, sweet", "Pink lotus absolute: delicate, sweet and floral."],
+    ["Cardamom Absolute CO2", 600, "brand-mint", "Spicy", "Spicy, fresh, warm", "Cardamom absolute (CO2): fresh, warm and spicy."],
+    ["Carthamus Absolute", 1500, "brand-tangerine", "Spicy", "Warm, dry, herbal", "Carthamus absolute: warm, dry and herbal."],
+    ["Oak Moss Absolute", 1400, "brand-mint", "Earthy", "Mossy, earthy, green", "Oak moss absolute: mossy, earthy and green."],
+    ["Orange Flower Absolute", 1400, "brand-tangerine", "Floral", "Floral, citrus, sweet", "Orange flower absolute: sweet, floral and citrusy."],
+    ["Lily of the Valley Absolute", 1250, "brand-lavender", "Floral", "Floral, green, fresh", "Lily of the valley absolute: green, fresh and floral."],
+    ["Tuberose Absolute", 6000, "brand-lavender", "Floral", "Floral, creamy, heady", "Tuberose absolute: creamy, heady and intensely floral."],
+    ["Orris Absolute (or Butter)", 7200, "brand-lavender", "Floral", "Powdery, floral, woody", "Orris absolute or butter: powdery, floral and softly woody."],
+    ["Gardenia Flower Absolute", 7500, "brand-lemon", "Floral", "Floral, creamy, rich", "Gardenia flower absolute: creamy, rich and lush."],
+    ["Cypriol Absolute (Nagarmotha)", 400, "brand-mint", "Earthy", "Earthy, woody, smoky", "Cypriol (nagarmotha) absolute: earthy, woody and slightly smoky."],
+  ],
+};
+
+/** Flagship pieces shown on the homepage. */
+const FEATURED = new Set([
+  "shamamatul-oud",
+  "mysore-sandalwood-fresh",
+  "taif-rose-oil",
+  "ruh-motia-kannauj",
+  "kiswat-al-kabah",
+  "assami-oud-1st-grade",
+  "himalayan-musk-oil",
+  "rose-absolute-rosa-indica",
+]);
+
+const slugify = (s: string) =>
+  s
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+/** Entries for the three sizes, from the 6 gm price: 12 gm is double and 3 gm is half. */
+export function sizeEntries(price6: number): string[] {
+  return [`12 gm=${price6 * 2}`, `6 gm=${price6}`, `3 gm=${Math.round(price6 / 2)}`];
 }
 
+const categoryBySlug = new Map<string, DemoCategorySlug>();
+
+export const demoProducts: StoreProduct[] = (Object.entries(CATALOGUE) as [DemoCategorySlug, Row[]][]).flatMap(([category, rows]) =>
+  rows.map(([name, price6, accent, family, notes, desc]) => {
+    const slug = slugify(name);
+    categoryBySlug.set(slug, category);
+    const unit6 = price6 ?? TEST_PRICE;
+    return {
+      id: `demo-${slug}`,
+      name,
+      slug,
+      tagline: DEMO_CATEGORIES.find((c) => c.slug === category)!.name.replace(/s$/, ""),
+      description: desc,
+      type: "DRINK",
+      price: unit6 * 2 * 100, // 12 gm, the default size
+      compareAtPrice: null,
+      images: [],
+      accentColor: accent,
+      flavor: notes,
+      mood: family,
+      sizes: sizeEntries(unit6),
+      benefits: ["Sold in 12, 6 or 3 gm", "Glass bottle with screw cap", "Packed with care"],
+      ingredients: "Perfume oil for external use only. Patch test before first use. Keep away from eyes, flame and children.",
+      stock: 20,
+      featured: FEATURED.has(slug),
+    } satisfies StoreProduct;
+  }),
+);
+
+/** Category a demo product belongs to (also used by prisma/seed.ts). */
+export function demoCategoryOf(p: Pick<StoreProduct, "slug">): DemoCategorySlug {
+  return categoryBySlug.get(p.slug) ?? "natural-oils";
+}
+
+/** Items with no price in the list: they get TEST_PRICE until the real one is set. */
+export const UNPRICED = Object.values(CATALOGUE)
+  .flat()
+  .filter((r) => r[1] === null)
+  .map((r) => r[0]);
+
 export const demoReviews = [
-  { author: "Ananya R.", rating: 5, comment: "The lavender is the real thing. My bedroom smells like a field in Provence and I am asleep in ten minutes.", images: [], verified: true },
-  { author: "Kabir S.", rating: 5, comment: "Temple blend in the diffuser on Sunday evening has become a non-negotiable ritual. Worth every rupee.", images: [], verified: true },
-  { author: "Meera D.", rating: 4, comment: "Beautiful packaging, honest oils. The Starter Six was the perfect gift for my sister.", images: [], verified: true },
-  { author: "Rohan T.", rating: 5, comment: "Peppermint is so clean it almost stings. Exactly what I wanted for afternoon slumps.", images: [], verified: false },
+  { author: "Ananya R.", rating: 5, comment: "The Mysore sandalwood is the real thing: creamy, soft, and it stays on my scarf for days.", images: [], verified: true },
+  { author: "Kabir S.", rating: 5, comment: "Shamamatul Oud is my winter attar now. Deep and warm, and the 3 gm bottle is perfect for travel.", images: [], verified: true },
+  { author: "Meera D.", rating: 4, comment: "Beautiful bottles and honest oils. I gifted the Ruh Motia to my mother and she loved it.", images: [], verified: true },
+  { author: "Rohan T.", rating: 5, comment: "Ruh Khus smells exactly like the first rain on dry earth. So cooling in the summer.", images: [], verified: false },
 ];
