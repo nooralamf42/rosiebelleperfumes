@@ -1,11 +1,18 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getPublishedPage } from "@/lib/pages";
+import { getPublishedPage, getPublishedPageList } from "@/lib/pages";
 import { getSettings } from "@/lib/settings";
 import { fillPageTokens } from "@/lib/page-tokens";
 import { Markdown } from "@/components/content/markdown";
 import { Reveal } from "@/components/motion/reveal";
 import { EditorialPage } from "@/components/content/editorial-page";
+
+export const revalidate = 3600;
+
+export async function generateStaticParams() {
+  const pages = await getPublishedPageList();
+  return pages.map((p) => ({ slug: p.slug }));
+}
 
 type Props = { params: Promise<{ slug: string }> };
 

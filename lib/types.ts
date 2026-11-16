@@ -18,6 +18,7 @@ export type StoreProduct = {
   ingredients: string | null;
   stock: number;
   featured: boolean;
+  categorySlug?: string | null;
 };
 
 export type ReviewView = {

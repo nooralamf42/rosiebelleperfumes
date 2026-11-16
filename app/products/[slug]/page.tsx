@@ -4,6 +4,14 @@ import { getProductBySlug, getProductReviews, getProducts } from "@/lib/products
 import { ProductDetail } from "@/components/product/product-detail";
 import { ProductShowcase } from "@/components/home/product-showcase";
 
+// Pre-build every product page; new products are built on first visit, then cached.
+export const revalidate = 3600;
+
+export async function generateStaticParams() {
+  const products = await getProducts();
+  return products.map((p) => ({ slug: p.slug }));
+}
+
 export async function generateMetadata({
   params,
 }: {

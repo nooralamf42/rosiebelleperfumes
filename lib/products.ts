@@ -7,7 +7,7 @@ import type { ProductType, StoreProduct, ReviewView } from "./types";
 
 type DbProduct = Awaited<ReturnType<typeof db.product.findFirst>>;
 
-function toStoreProduct(p: NonNullable<DbProduct>): StoreProduct {
+function toStoreProduct(p: NonNullable<DbProduct> & { category?: { slug: string } | null }): StoreProduct {
   return {
     id: p.id,
     name: p.name,
@@ -26,6 +26,7 @@ function toStoreProduct(p: NonNullable<DbProduct>): StoreProduct {
     ingredients: p.ingredients,
     stock: p.stock,
     featured: p.featured,
+    categorySlug: p.category?.slug ?? null,
   };
 }
 
@@ -53,6 +54,7 @@ const loadProducts = unstable_cache(
         ...(featured !== null ? { featured } : {}),
       },
       orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
+      include: { category: { select: { slug: true } } },
     });
     return rows.map(toStoreProduct);
   },
@@ -92,9 +94,11 @@ const loadProductReviews = unstable_cache(
 export async function getProducts(filter: ProductFilter = {}): Promise<StoreProduct[]> {
   if (!hasDatabase) {
     // Demo mode (no DB configured): categories come from the demo catalogue.
-    return demoProducts.filter(
+    return demoProducts
+      .map((p) => ({ ...p, categorySlug: demoCategoryOf(p) }))
+      .filter(
       (p) =>
-        (!filter.categorySlug || demoCategoryOf(p) === filter.categorySlug) &&
+        (!filter.categorySlug || p.categorySlug === filter.categorySlug) &&
         (filter.type === undefined || p.type === filter.type) &&
         (filter.featured === undefined || p.featured === filter.featured),
     );

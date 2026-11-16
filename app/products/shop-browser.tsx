@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { SlidersHorizontal, X } from "lucide-react";
+import { Reveal } from "@/components/motion/reveal";
 import { ProductCard } from "@/components/product/product-card";
 import { buttonVariants } from "@/components/ui/button";
 import { formatPrice } from "@/lib/format";
@@ -30,16 +31,26 @@ const roundUp = (p: number) => Math.ceil(p / STEP) * STEP;
  * filtered view can be shared or refreshed.
  */
 export function ShopBrowser({
-  products,
+  products: allProducts,
   categories,
-  activeCategory,
+  heading,
+  description,
 }: {
   products: StoreProduct[];
   categories: { name: string; slug: string }[];
-  activeCategory?: string;
+  heading: string;
+  description: string;
 }) {
   const router = useRouter();
   const params = useSearchParams();
+  // The page itself is static (served from cache); the category comes from the URL here.
+  const requested = params.get("category") ?? undefined;
+  const activeCategory = categories.some((c) => c.slug === requested) ? requested : undefined;
+  const current = categories.find((c) => c.slug === activeCategory);
+  const products = useMemo(
+    () => (activeCategory ? allProducts.filter((p) => p.categorySlug === activeCategory) : allProducts),
+    [allProducts, activeCategory],
+  );
 
   const floor = products.length ? roundDown(Math.min(...products.map(startingPrice))) : 0;
   const ceil = products.length ? roundUp(Math.max(...products.map(startingPrice))) : STEP;
@@ -109,6 +120,12 @@ export function ShopBrowser({
 
   return (
     <>
+      <Reveal>
+        <p className="text-eyebrow">{current ? "Collection" : "Shop"}</p>
+        <h1 className="mt-3 max-w-2xl text-4xl sm:text-5xl lg:text-6xl">{current?.name ?? heading}</h1>
+        {description && !current && <p className="mt-4 max-w-lg text-muted-foreground">{description}</p>}
+      </Reveal>
+
       {/* category pills + toolbar */}
       <div className="sticky top-[var(--nav-offset,4rem)] z-30 -mx-4 mt-8 border-y border-foreground/10 bg-background px-4 transition-[top] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
         <div className="flex flex-col gap-2 py-3 md:flex-row md:items-start md:justify-between md:gap-4">

@@ -2,40 +2,36 @@ import { Suspense } from "react";
 import { getProducts } from "@/lib/products";
 import { getStoreCategories } from "@/lib/categories";
 import { getSettings } from "@/lib/settings";
-import { Reveal } from "@/components/motion/reveal";
 import { ProductGridSkeleton } from "@/components/product/product-skeleton";
 import { ShopBrowser } from "./shop-browser";
 
 export const metadata = { title: "Shop all" };
-export const dynamic = "force-dynamic";
 
-export default async function ProductsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ category?: string }>;
-}) {
-  const { category } = await searchParams;
-  const [categories, { identity }] = await Promise.all([getStoreCategories(), getSettings()]);
-  const current = categories.find((c) => c.slug === category);
+/*
+ * Static page: built once and served from the CDN, refreshed when the admin
+ * changes products (cache tags) or after an hour. Category and filters live in
+ * the URL and are applied in the browser, so no request ever reaches the
+ * server just to filter a list.
+ */
+export const revalidate = 3600;
+
+export default async function ProductsPage() {
+  const [categories, { identity }, products] = await Promise.all([
+    getStoreCategories(),
+    getSettings(),
+    getProducts(),
+  ]);
 
   return (
     <div className="container-page py-10 sm:py-14">
-      <Reveal>
-        <p className="text-eyebrow">{current ? "Collection" : "Shop"}</p>
-        <h1 className="mt-3 max-w-2xl text-4xl sm:text-5xl lg:text-6xl">{current?.name ?? identity.shopHeading}</h1>
-        {identity.shopDescription && !current && (
-          <p className="mt-4 max-w-lg text-muted-foreground">{identity.shopDescription}</p>
-        )}
-      </Reveal>
-
-      <Suspense key={category ?? "all"} fallback={<ProductGridSkeleton className="mt-16" />}>
-        <Browser category={category} categories={categories} />
+      <Suspense fallback={<ProductGridSkeleton className="mt-16" />}>
+        <ShopBrowser
+          products={products}
+          categories={categories}
+          heading={identity.shopHeading}
+          description={identity.shopDescription}
+        />
       </Suspense>
     </div>
   );
-}
-
-async function Browser({ category, categories }: { category?: string; categories: { name: string; slug: string }[] }) {
-  const products = await getProducts({ categorySlug: category });
-  return <ShopBrowser products={products} categories={categories} activeCategory={category} />;
 }
