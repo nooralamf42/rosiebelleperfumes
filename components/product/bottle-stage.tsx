@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion, useMotionValue, useReducedMotion, useSpring, useTransform } from "motion/react";
+import { AnimatePresence, motion, useMotionValue, useReducedMotion, useSpring } from "motion/react";
 import { BottlePhoto, bottleHeightRatio } from "./bottle-photo";
 import type { BottleSize } from "@/lib/sizes";
 
@@ -11,7 +11,7 @@ const SETTLE_SECONDS = 1.1;
  * The hero bottle on a product page, using the studio photo. It rises into
  * place with a gentle swing and the label (name, brand, place) fades in as it
  * settles. The bottle also tilts a little toward the pointer (or a finger
- * dragged across it), with a moving shine, so it feels like an object rather
+ * dragged across it), so it feels like an object rather
  * than a flat picture. Choosing another size lifts the current bottle away and
  * the new one rises into its place.
  */
@@ -24,8 +24,6 @@ export function BottleStage({ size, accent, name, brand }: { size: BottleSize; a
   const ty = useMotionValue(0);
   const rotY = useSpring(tx, { stiffness: 120, damping: 16 });
   const rotX = useSpring(ty, { stiffness: 120, damping: 16 });
-  const shine = useMotionValue(50);
-  const shineX = useTransform(useSpring(shine, { stiffness: 120, damping: 20 }), (v) => `${v}%`);
 
   useEffect(() => {
     if (reduce) return;
@@ -40,12 +38,10 @@ export function BottleStage({ size, accent, name, brand }: { size: BottleSize; a
     const y = (e.clientY - r.top) / r.height - 0.5;
     tx.set(x * 34);
     ty.set(-y * 12);
-    shine.set(50 + x * 80);
   };
   const onLeave = () => {
     tx.set(0);
     ty.set(0);
-    shine.set(50);
   };
 
   return (
@@ -71,16 +67,6 @@ export function BottleStage({ size, accent, name, brand }: { size: BottleSize; a
             style={{ height: `${(100 * bottleHeightRatio(size)).toFixed(1)}%`, rotateY: rotY, rotateX: rotX, transformStyle: "preserve-3d" }}
           >
             <BottlePhoto size={size} accent={accent} name={name} brand={brand} priority className="h-full" labelVisible={reduce ? true : labelFor === size} />
-            {/* a soft highlight that slides across the glass as the bottle tilts */}
-            <motion.span
-              aria-hidden
-              className="pointer-events-none absolute inset-0 mix-blend-soft-light"
-              style={{
-                background: "linear-gradient(105deg, transparent 38%, rgba(255,255,255,0.55) 50%, transparent 62%)",
-                backgroundSize: "260% 100%",
-                backgroundPositionX: shineX,
-              }}
-            />
           </motion.div>
         </motion.div>
       </AnimatePresence>

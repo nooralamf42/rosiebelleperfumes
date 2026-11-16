@@ -119,13 +119,31 @@ async function main() {
       }
       if (n >= 14) { yb = y; break; }
     }
-    bottom[band.key] = yb + 3;
+    bottom[band.key] = yb - 2;
   }
   for (let y = 0; y < H; y++)
     for (let x = 0; x < W; x++) {
       const band = bands.find((b) => x >= b.x0 && x <= b.x1);
       if (!band || y > bottom[band.key]) bg[y * W + x] = 1;
     }
+  // Also trim to the bottle's own width: off-white floor reflections at the foot of the glass
+  // (the corners beside the base) would otherwise show as a pale box on coloured backgrounds.
+  for (const band of bands) {
+    let top = H, bot = 0;
+    for (let y = 0; y < H; y++)
+      for (let x = band.x0; x <= band.x1; x++)
+        if (!bg[y * W + x]) { top = Math.min(top, y); bot = Math.max(bot, y); }
+    const lefts: number[] = [], rights: number[] = [];
+    for (let y = top + Math.round((bot - top) * 0.45); y <= top + Math.round((bot - top) * 0.6); y++) {
+      let l = -1, r = -1;
+      for (let x = band.x0; x <= band.x1; x++) if (!bg[y * W + x]) { if (l < 0) l = x; r = x; }
+      if (l >= 0) { lefts.push(l); rights.push(r); }
+    }
+    lefts.sort((a, b) => a - b); rights.sort((a, b) => a - b);
+    const minX = lefts[Math.floor(lefts.length / 2)] - 1, maxX = rights[Math.floor(rights.length / 2)] + 1;
+    for (let y = 0; y < H; y++)
+      for (let x = band.x0; x <= band.x1; x++) if (x < minX || x > maxX) bg[y * W + x] = 1;
+  }
   // Erode the cut-out by 2px so no white halo survives on a coloured background.
   for (let pass = 0; pass < 2; pass++) {
     const grow: number[] = [];
