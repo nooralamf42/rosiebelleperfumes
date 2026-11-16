@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
-import { Check, ChevronRight, Droplets, Leaf, Minus, Plus, ShieldCheck, Star, Truck } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Droplets, Minus, Plus, ShieldCheck, Star, Truck } from "lucide-react";
 import { bottleBackdrop } from "./product-media";
 import { BottlePhoto, bottleHeightRatio } from "./bottle-photo";
 import { AddToCartButton } from "./add-to-cart-button";
@@ -13,6 +13,7 @@ import { formatPrice, discountPercent } from "@/lib/format";
 import { noteChips, scentProfile } from "@/lib/scent";
 import { bottleSizeOf, bottleSizesOf, compareAtForPrice, priceForSize, productSizes } from "@/lib/sizes";
 import { useSiteSettings } from "@/components/providers/site-settings-provider";
+import { cn } from "@/lib/utils";
 import type { StoreProduct, ReviewView } from "@/lib/types";
 
 /** Lowest cart value that unlocks free shipping, from the store's rules. */
@@ -31,6 +32,46 @@ function freeShippingText(rules: {
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
+/** Folding sections for the details, so the page stays short on a phone. */
+function Accordion({ items, defaultOpen = 0 }: { items: { title: string; body: ReactNode }[]; defaultOpen?: number | null }) {
+  const [open, setOpen] = useState<number | null>(defaultOpen);
+  return (
+    <div className="divide-y divide-foreground/10 border-y border-foreground/10">
+      {items.map((it, i) => {
+        const isOpen = open === i;
+        return (
+          <div key={it.title}>
+            <button
+              type="button"
+              onClick={() => setOpen(isOpen ? null : i)}
+              aria-expanded={isOpen}
+              className="flex w-full items-center justify-between gap-4 py-4 text-left"
+            >
+              <span className="text-xs font-medium uppercase tracking-[0.16em]">{it.title}</span>
+              <motion.span animate={{ rotate: isOpen ? 45 : 0 }} transition={{ duration: 0.25 }} className="grid size-6 place-items-center">
+                <Plus className="size-4" />
+              </motion.span>
+            </button>
+            <AnimatePresence initial={false}>
+              {isOpen && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3, ease }}
+                  className="overflow-hidden"
+                >
+                  <div className="pb-5 text-sm leading-relaxed text-muted-foreground">{it.body}</div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export function ProductDetail({
   product,
   reviews,
@@ -45,7 +86,6 @@ export function ProductDetail({
   const sizeList = productSizes(product);
   // The first size is the default, so the price and bottle are always for a real choice.
   const [selectedSize, setSelectedSize] = useState<string | null>(sizeList[0]?.label ?? null);
-  const [tab, setTab] = useState<"about" | "use" | "safety">("about");
   const images = product.images ?? [];
   const { commerce, identity } = useSiteSettings();
   const unitPrice = priceForSize(product, selectedSize);
@@ -60,10 +100,35 @@ export function ProductDetail({
   const profile = scentProfile(product);
   const chips = noteChips(product);
 
+  // The pinned buy bar (phones only) shows whenever the main buy section is off screen.
+  const buyRef = useRef<HTMLDivElement>(null);
+  const [buyVisible, setBuyVisible] = useState(true);
+  const [footerVisible, setFooterVisible] = useState(false);
+  const showBar = !buyVisible && !footerVisible;
+  useEffect(() => {
+    const el = buyRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(([entry]) => setBuyVisible(entry.isIntersecting), { threshold: 0.15 });
+    io.observe(el);
+    // Step aside at the bottom of the page so the bar never covers the footer.
+    const footer = document.querySelector("footer");
+    const fo = footer ? new IntersectionObserver(([entry]) => setFooterVisible(entry.isIntersecting), { threshold: 0.05 }) : null;
+    if (footer && fo) fo.observe(footer);
+    return () => {
+      io.disconnect();
+      fo?.disconnect();
+    };
+  }, []);
+
+  const description = <p className="max-w-lg text-base leading-relaxed text-muted-foreground">{product.description}</p>;
+
   return (
-    <div className="container-page py-8 sm:py-12">
-      {/* breadcrumb */}
-      <nav className="mb-6 flex items-center gap-1.5 text-xs text-muted-foreground" aria-label="Breadcrumb">
+    <div className="container-page pb-8 pt-3 sm:py-10 lg:py-12">
+      {/* navigation: a quick back link on phones, a breadcrumb from tablet up */}
+      <Link href="/products" className="mb-3 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground sm:hidden">
+        <ChevronLeft className="size-4" /> {categoryName ?? "Shop"}
+      </Link>
+      <nav className="mb-6 hidden items-center gap-1.5 text-xs text-muted-foreground sm:flex" aria-label="Breadcrumb">
         <Link href="/" className="hover:text-foreground">Home</Link>
         <ChevronRight className="size-3" />
         <Link href="/products" className="hover:text-foreground">Shop</Link>
@@ -75,15 +140,59 @@ export function ProductDetail({
         )}
       </nav>
 
-      <div className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
-        {/* Media */}
+      {/*
+       * One grid, three blocks. On a phone they stack as title, picture, buy
+       * section so the Add to bag button is near the top. From tablet up the
+       * picture takes the left column (sticky) and title + buy sit on the right.
+       */}
+      <div className="grid gap-y-5 md:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] md:gap-x-8 md:gap-y-0 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-x-14">
+        {/* title and price */}
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease }}
-          className="lg:sticky lg:top-24 lg:self-start"
+          transition={{ duration: 0.6, ease }}
+          className="order-1 md:order-none md:col-start-2 md:row-start-1"
         >
-          <div className="group relative aspect-[4/5] overflow-hidden rounded-[2rem] bg-muted shadow-soft ring-1 ring-foreground/10">
+          {product.tagline && <p className="text-eyebrow">{product.tagline}</p>}
+          <h1 className="mt-2 text-3xl leading-[1.05] sm:text-4xl lg:text-5xl">{product.name}</h1>
+
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-x-5 gap-y-2 md:mt-5 md:justify-start">
+            <div className="flex items-baseline gap-2.5">
+              <span className="font-heading text-2xl md:text-3xl">{formatPrice(unitPrice)}</span>
+              {unitCompare && <span className="text-sm text-muted-foreground line-through">{formatPrice(unitCompare)}</span>}
+              {off && (
+                <span className="rounded-full bg-amber px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-white">−{off}%</span>
+              )}
+            </div>
+            {reviews.length > 0 && (
+              <a href="#reviews" className="flex items-center gap-2 text-sm">
+                <span className="flex text-amber">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className={i < Math.round(avgRating) ? "size-3.5 fill-current" : "size-3.5 text-foreground/20"} />
+                  ))}
+                </span>
+                <span className="text-muted-foreground">
+                  {avgRating.toFixed(1)} · {reviews.length}
+                </span>
+              </a>
+            )}
+          </div>
+        </motion.div>
+
+        {/* picture */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.05, ease }}
+          className="order-2 md:sticky md:top-24 md:order-none md:col-start-1 md:row-span-2 md:row-start-1 md:self-start"
+        >
+          <div
+            className={cn(
+              "group relative w-full overflow-hidden rounded-3xl bg-muted shadow-soft ring-1 ring-foreground/10 md:rounded-[2rem]",
+              // short on a phone so the buy button stays near the top; tall and elegant on larger screens
+              "aspect-square max-h-[40svh] md:aspect-[4/5] md:max-h-[calc(100svh-8rem)]",
+            )}
+          >
             {images.length > 0 ? (
               <AnimatePresence mode="wait" initial={false}>
                 <motion.div
@@ -94,11 +203,11 @@ export function ProductDetail({
                   transition={{ duration: 0.4 }}
                   className="absolute inset-0"
                 >
-                  <Image src={images[active]} alt={product.name} fill priority sizes="(max-width: 1024px) 100vw, 50vw" className="object-cover" />
+                  <Image src={images[active]} alt={product.name} fill priority sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" />
                 </motion.div>
               </AnimatePresence>
             ) : (
-              <div className="absolute inset-0 flex items-end justify-center px-[10%] pb-[8%]" style={bottleBackdrop(product.accentColor)}>
+              <div className="absolute inset-0 flex items-end justify-center px-[8%] pb-[6%] pt-[8%]" style={bottleBackdrop(product.accentColor)}>
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.div
                     key={shownBottle}
@@ -114,23 +223,22 @@ export function ProductDetail({
                       name={product.name}
                       brand={identity.storeName}
                       priority
-                      style={{ height: `${(88 * bottleHeightRatio(shownBottle)).toFixed(1)}%` }}
+                      style={{ height: `${(100 * bottleHeightRatio(shownBottle)).toFixed(1)}%` }}
                     />
                   </motion.div>
                 </AnimatePresence>
               </div>
             )}
-            <div className="pointer-events-none absolute left-4 top-4 flex gap-2">
-              {product.mood && (
-                <span className="glass rounded-full px-3 py-1 text-[10px] font-medium uppercase tracking-[0.18em]">{product.mood}</span>
-              )}
-              {off && (
-                <span className="rounded-full bg-amber px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-white">−{off}%</span>
-              )}
-            </div>
+            {product.mood && (
+              <span className="glass pointer-events-none absolute left-3 top-3 rounded-full px-3 py-1 text-[10px] font-medium uppercase tracking-[0.18em] md:left-4 md:top-4">
+                {product.mood}
+              </span>
+            )}
           </div>
+
+          {/* bottle size thumbnails: tablet and up (on a phone the size buttons below do this job) */}
           {images.length === 0 && bottleSizes.length > 1 && (
-            <ul className="mt-3 grid grid-cols-3 gap-2 sm:gap-3">
+            <ul className="mt-3 hidden grid-cols-3 gap-3 md:grid">
               {bottleSizes.map((b) => {
                 const entry = sizeList.find((s) => bottleSizeOf(s.label) === b);
                 const on = shownBottle === b;
@@ -141,12 +249,12 @@ export function ProductDetail({
                       onClick={() => entry && setSelectedSize(entry.label)}
                       aria-label={`Show the ${b} gm bottle`}
                       aria-pressed={on}
-                      className={`relative flex aspect-square w-full items-end justify-center overflow-hidden rounded-2xl px-3 pb-3 transition-all ${
+                      className={`relative flex aspect-[4/3] w-full items-end justify-center overflow-hidden rounded-2xl px-3 pb-2 transition-all lg:aspect-square ${
                         on ? "ring-2 ring-foreground ring-offset-2 ring-offset-background" : "opacity-65 hover:opacity-100"
                       }`}
                       style={bottleBackdrop(product.accentColor)}
                     >
-                      <span className="flex h-full w-full items-end justify-center">
+                      <span className="flex h-full w-full items-end justify-center pt-5">
                         <BottlePhoto
                           size={b}
                           accent={product.accentColor}
@@ -163,9 +271,9 @@ export function ProductDetail({
             </ul>
           )}
           {images.length > 1 && (
-            <ul className="mt-3 grid grid-cols-5 gap-2 sm:gap-3">
+            <ul className="mt-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] md:grid md:grid-cols-5 md:gap-3 md:overflow-visible [&::-webkit-scrollbar]:hidden">
               {images.map((src, i) => (
-                <li key={src}>
+                <li key={src} className="w-16 shrink-0 md:w-auto">
                   <button
                     type="button"
                     onClick={() => setActive(i)}
@@ -183,40 +291,87 @@ export function ProductDetail({
           )}
         </motion.div>
 
-        {/* Info */}
+        {/* buy section and details */}
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.1, ease }}
-          className="flex flex-col"
+          transition={{ duration: 0.6, delay: 0.1, ease }}
+          className="order-3 flex flex-col md:order-none md:col-start-2 md:row-start-2 md:pt-6"
         >
-          {product.tagline && <p className="text-eyebrow">{product.tagline}</p>}
-          <h1 className="mt-3 text-4xl leading-[1.02] sm:text-5xl">{product.name}</h1>
+          {/* on tablet and up the story comes first; on a phone it follows the buy button */}
+          <div className="hidden md:block">{description}</div>
 
-          <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2">
-            <div className="flex items-baseline gap-3">
-              <span className="font-heading text-2xl">{formatPrice(unitPrice)}</span>
-              {unitCompare && (
-                <span className="text-sm text-muted-foreground line-through">{formatPrice(unitCompare)}</span>
-              )}
-            </div>
-            {reviews.length > 0 && (
-              <a href="#reviews" className="flex items-center gap-2 text-sm">
-                <span className="flex text-amber">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className={i < Math.round(avgRating) ? "size-3.5 fill-current" : "size-3.5 text-foreground/20"} />
-                  ))}
-                </span>
-                <span className="text-muted-foreground">
-                  {avgRating.toFixed(1)} · {reviews.length} {reviews.length === 1 ? "review" : "reviews"}
-                </span>
-              </a>
+          <div ref={buyRef} className="md:mt-6">
+            {sizeList.length > 0 && (
+              <div>
+                <p className="text-sm font-medium">Size</p>
+                <div className="mt-2 grid grid-cols-3 gap-2" role="radiogroup" aria-label="Size">
+                  {sizeList.map((s) => {
+                    const on = selectedSize === s.label;
+                    return (
+                      <button
+                        key={s.label}
+                        type="button"
+                        role="radio"
+                        aria-checked={on}
+                        onClick={() => setSelectedSize(s.label)}
+                        className={
+                          "rounded-2xl border px-2 py-2.5 text-center transition-all md:py-3 " +
+                          (on ? "border-primary bg-primary text-primary-foreground shadow-soft" : "border-foreground/15 hover:border-foreground")
+                        }
+                      >
+                        <span className="block text-sm font-medium">{s.label}</span>
+                        <span className={"mt-0.5 block text-xs tabular-nums " + (on ? "opacity-85" : "text-muted-foreground")}>{formatPrice(s.price)}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             )}
+
+            {/* quantity + add to bag */}
+            <div className="mt-4 flex items-center gap-3">
+              <div className="flex shrink-0 items-center gap-0.5 rounded-full border border-foreground/15 p-1">
+                <button
+                  onClick={() => setQty((q) => Math.max(1, q - 1))}
+                  className="grid size-10 place-items-center rounded-full hover:bg-muted"
+                  aria-label="Decrease quantity"
+                >
+                  <Minus className="size-4" />
+                </button>
+                <span className="w-7 text-center text-sm font-medium tabular-nums">{qty}</span>
+                <button
+                  onClick={() => setQty((q) => q + 1)}
+                  className="grid size-10 place-items-center rounded-full hover:bg-muted"
+                  aria-label="Increase quantity"
+                >
+                  <Plus className="size-4" />
+                </button>
+              </div>
+              <AddToCartButton
+                product={product}
+                qty={qty}
+                selectedSize={selectedSize}
+                unitPrice={unitPrice}
+                size="lg"
+                className="h-12 min-w-0 flex-1 rounded-full text-sm shadow-soft"
+              >
+                Add to bag · {formatPrice(unitPrice * qty)}
+              </AddToCartButton>
+            </div>
+
+            <ul className="mt-4 grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
+              {shippingNote && (
+                <li className="flex items-center gap-2 sm:col-span-2"><Truck className="size-4 shrink-0 text-primary" strokeWidth={1.7} />{shippingNote}</li>
+              )}
+              <li className="flex items-center gap-2"><ShieldCheck className="size-4 shrink-0 text-primary" strokeWidth={1.7} />Packed with care, tracked delivery</li>
+              <li className="flex items-center gap-2"><Droplets className="size-4 shrink-0 text-primary" strokeWidth={1.7} />Glass bottle, screw-top cap</li>
+            </ul>
           </div>
 
-          <p className="mt-6 max-w-lg text-base leading-relaxed text-muted-foreground">{product.description}</p>
+          {/* phones: the description follows the buy button */}
+          <div className="mt-6 md:hidden">{description}</div>
 
-          {/* aroma notes */}
           {chips.length > 0 && (
             <div className="mt-6">
               <p className="text-eyebrow">Aroma notes</p>
@@ -235,10 +390,10 @@ export function ProductDetail({
           )}
 
           {/* scent profile */}
-          <div className="mt-7 grid grid-cols-3 gap-x-6 gap-y-4 rounded-3xl border border-foreground/10 bg-card p-5 sm:grid-cols-6">
+          <div className="mt-6 grid grid-cols-3 gap-x-5 gap-y-4 rounded-3xl border border-foreground/10 bg-card p-5 sm:grid-cols-6">
             {profile.map((a, i) => (
               <div key={a.label}>
-                <div className="flex h-14 items-end">
+                <div className="flex h-12 items-end">
                   <motion.div
                     initial={{ height: 0 }}
                     animate={{ height: `${Math.max(8, a.value * 100)}%` }}
@@ -252,137 +407,50 @@ export function ProductDetail({
             ))}
           </div>
 
-          {sizeList.length > 0 && (
-            <div className="mt-7">
-              <p className="text-sm font-medium">Size</p>
-              <div className="mt-2 grid grid-cols-3 gap-2" role="radiogroup" aria-label="Size">
-                {sizeList.map((s) => {
-                  const on = selectedSize === s.label;
-                  return (
-                    <button
-                      key={s.label}
-                      type="button"
-                      role="radio"
-                      aria-checked={on}
-                      onClick={() => setSelectedSize(s.label)}
-                      className={
-                        "rounded-2xl border px-3 py-3 text-center transition-all " +
-                        (on
-                          ? "border-primary bg-primary text-primary-foreground shadow-soft"
-                          : "border-foreground/15 hover:border-foreground")
-                      }
-                    >
-                      <span className="block text-sm font-medium">{s.label}</span>
-                      <span className={"mt-0.5 block text-xs tabular-nums " + (on ? "opacity-85" : "text-muted-foreground")}>
-                        {formatPrice(s.price)}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Quantity + add */}
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-            <div className="flex items-center gap-1 self-start rounded-full border border-foreground/15 p-1">
-              <button
-                onClick={() => setQty((q) => Math.max(1, q - 1))}
-                className="grid size-10 place-items-center rounded-full hover:bg-muted"
-                aria-label="Decrease quantity"
-              >
-                <Minus className="size-4" />
-              </button>
-              <span className="w-8 text-center text-sm font-medium tabular-nums">{qty}</span>
-              <button
-                onClick={() => setQty((q) => q + 1)}
-                className="grid size-10 place-items-center rounded-full hover:bg-muted"
-                aria-label="Increase quantity"
-              >
-                <Plus className="size-4" />
-              </button>
-            </div>
-            <AddToCartButton
-              product={product}
-              qty={qty}
-              selectedSize={selectedSize}
-              unitPrice={unitPrice}
-              size="lg"
-              className="h-12 w-full rounded-full text-sm shadow-soft sm:w-auto sm:flex-1 sm:px-10"
-            >
-              Add to bag · {formatPrice(unitPrice * qty)}
-            </AddToCartButton>
-          </div>
-
-          <ul className="mt-6 grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
-            {shippingNote && (
-              <li className="flex items-center gap-2"><Truck className="size-4 text-primary" strokeWidth={1.7} />{shippingNote}</li>
-            )}
-            <li className="flex items-center gap-2"><ShieldCheck className="size-4 text-primary" strokeWidth={1.7} />Packed with care, tracked delivery</li>
-            <li className="flex items-center gap-2"><Leaf className="size-4 text-primary" strokeWidth={1.7} />Choose 12, 6 or 3 gm</li>
-            <li className="flex items-center gap-2"><Droplets className="size-4 text-primary" strokeWidth={1.7} />Glass bottle, screw-top cap</li>
-          </ul>
-
-          {/* Tabs */}
-          <div className="mt-9 border-t border-foreground/10">
-            <div className="flex gap-6">
-              {(
-                [
-                  ["about", "What's inside"],
-                  ["use", "How to use"],
-                  ["safety", "Safety"],
-                ] as const
-              ).map(([k, label]) => (
-                <button
-                  key={k}
-                  onClick={() => setTab(k)}
-                  className={`relative py-4 text-xs font-medium uppercase tracking-[0.14em] transition-colors ${tab === k ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}
-                >
-                  {label}
-                  {tab === k && <motion.span layoutId="pd-tab" className="absolute inset-x-0 -top-px h-0.5 bg-amber" />}
-                </button>
-              ))}
-            </div>
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.div
-                key={tab}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.25 }}
-                className="pb-2 text-sm leading-relaxed text-muted-foreground"
-              >
-                {tab === "about" && (
-                  <ul className="grid gap-2 sm:grid-cols-2">
-                    {(product.benefits.length ? product.benefits : ["100% pure", "Small batch"]).map((b) => (
-                      <li key={b} className="flex items-center gap-2 text-foreground/85">
-                        <Check className="size-3.5 shrink-0 text-primary" />
-                        {b}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                {tab === "use" && (
-                  <p>
-                    <strong className="text-foreground">Wear it:</strong> a small dab on the wrists, behind the ears or on the neck. It warms and develops on your skin over the first hour.{" "}
-                    <strong className="text-foreground">On clothing:</strong> dab a little on a scarf or the inside of a collar. It lasts for days on fabric, but test a hidden spot first.{" "}
-                    <strong className="text-foreground">Store:</strong> keep the cap closed, in a cool, dark place away from heat.
-                  </p>
-                )}
-                {tab === "safety" && (
-                  <p>
-                    {product.ingredients ||
-                      "For external and aromatic use only. Keep out of reach of children and pets. Patch test before use. Consult a doctor if pregnant or nursing."}
-                  </p>
-                )}
-              </motion.div>
-            </AnimatePresence>
+          {/* details */}
+          <div className="mt-8">
+            <Accordion
+              items={[
+                {
+                  title: "What's inside",
+                  body: (
+                    <ul className="grid gap-2 sm:grid-cols-2">
+                      {(product.benefits.length ? product.benefits : ["Sold in 12, 6 or 3 gm"]).map((b) => (
+                        <li key={b} className="flex items-center gap-2 text-foreground/85">
+                          <Check className="size-3.5 shrink-0 text-primary" />
+                          {b}
+                        </li>
+                      ))}
+                    </ul>
+                  ),
+                },
+                {
+                  title: "How to use",
+                  body: (
+                    <p>
+                      <strong className="text-foreground">Wear it:</strong> a small dab on the wrists, behind the ears or on the neck. It warms and develops on your skin over the first hour.{" "}
+                      <strong className="text-foreground">On clothing:</strong> dab a little on a scarf or the inside of a collar. It lasts for days on fabric, but test a hidden spot first.{" "}
+                      <strong className="text-foreground">Store:</strong> keep the cap closed, in a cool, dark place away from heat.
+                    </p>
+                  ),
+                },
+                {
+                  title: "Safety & care",
+                  body: (
+                    <p>
+                      {product.ingredients ||
+                        "For external and aromatic use only. Keep out of reach of children and pets. Patch test before use. Consult a doctor if pregnant or nursing."}
+                    </p>
+                  ),
+                },
+              ]}
+            />
           </div>
         </motion.div>
       </div>
 
       {/* Reviews */}
-      <section id="reviews" className="mt-20 scroll-mt-24 border-t border-foreground/10 pt-14">
+      <section id="reviews" className="mt-16 scroll-mt-24 border-t border-foreground/10 pt-12 md:mt-20 md:pt-14">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-eyebrow">Reviews</p>
@@ -415,9 +483,7 @@ export function ProductDetail({
                       <Star key={s} className="size-3.5 fill-current" />
                     ))}
                   </div>
-                  {r.verified && (
-                    <span className="text-[11px] uppercase tracking-[0.1em] text-muted-foreground">✓ Verified</span>
-                  )}
+                  {r.verified && <span className="text-[11px] uppercase tracking-[0.1em] text-muted-foreground">✓ Verified</span>}
                 </div>
                 <blockquote className="mt-3 font-heading text-lg leading-snug">“{r.comment}”</blockquote>
                 {r.images.length > 0 && (
@@ -437,6 +503,40 @@ export function ProductDetail({
 
         <ReviewForm productId={product.id} />
       </section>
+
+      {/* pinned buy bar, phones only: appears once the main button has scrolled away */}
+      <AnimatePresence>
+        {showBar && (
+          <motion.div
+            key="buy-bar"
+            initial={{ y: 90 }}
+            animate={{ y: 0 }}
+            exit={{ y: 90 }}
+            transition={{ duration: 0.3, ease }}
+            className="fixed inset-x-0 bottom-0 z-40 border-t border-foreground/10 bg-background/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_30px_-12px_rgba(0,0,0,0.25)] backdrop-blur md:hidden"
+          >
+            <div className="container-page flex items-center gap-3 py-2.5">
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium">{product.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  {selectedSize ? `${selectedSize} · ` : ""}
+                  {formatPrice(unitPrice * qty)}
+                </p>
+              </div>
+              <AddToCartButton
+                product={product}
+                qty={qty}
+                selectedSize={selectedSize}
+                unitPrice={unitPrice}
+                size="lg"
+                className="h-11 shrink-0 rounded-full px-6 text-sm shadow-soft"
+              >
+                Add to bag
+              </AddToCartButton>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
