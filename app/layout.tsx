@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import localFont from "next/font/local";
 import { Fraunces } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
@@ -15,6 +16,7 @@ import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { CartDrawer } from "@/components/cart/cart-drawer";
 import { Preloader } from "@/components/motion/preloader";
+import { RouteProgress } from "@/components/motion/route-progress";
 import { Toaster } from "@/components/ui/sonner";
 
 /*
@@ -105,6 +107,9 @@ export default async function RootLayout({
         <SiteSettingsProvider value={clientSettings}>
           <SmoothScrollProvider>
             <Preloader name={settings.identity.storeName} />
+            <Suspense fallback={null}>
+              <RouteProgress />
+            </Suspense>
             <Navbar
               categories={categories}
               extraLinks={footerPages
