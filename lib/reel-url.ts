@@ -10,8 +10,12 @@ export function reelSources(videoUrl: string, posterUrl: string): { video: strin
   if (!m || /^(?:[a-z]{1,3}_[^/]+,?)+\//.test(m[2])) return { video: videoUrl, poster: posterUrl };
   const base = m[2];
   const withoutExt = base.replace(/\.[a-z0-9]+$/i, "");
+  // Videos in store/reels were already compressed to phone size when they were
+  // added, so they play as they are. Re-encoding them on delivery only adds
+  // delay and can make the file bigger.
+  const precompressed = base.includes("store/reels/");
   return {
-    video: `${m[1]}c_fill,ar_9:16,w_540,f_auto:video,q_auto:low/${base}`,
+    video: precompressed ? videoUrl : `${m[1]}c_fill,ar_9:16,w_540,f_auto:video,q_auto:low/${base}`,
     poster: posterUrl || `${m[1]}c_fill,ar_9:16,w_540,so_1,f_jpg,q_auto/${withoutExt}.jpg`,
   };
 }

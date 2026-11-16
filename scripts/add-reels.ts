@@ -4,7 +4,7 @@
  *   npx tsx scripts/add-reels.ts <folder> [--handle=@rosiebelleperfume_1] [--append] [--dry-run]
  *
  * For every .mp4 / .mov / .webm / .m4v in the folder (newest first) it:
- *   1. compresses the video with ffmpeg (max 720 px wide, H.264, small file,
+ *   1. compresses the video with ffmpeg (max 540 px wide, H.264, small file,
  *      sound kept, first 60 seconds), so the site stays light,
  *   2. uploads the small version to your Cloudinary (store/reels),
  *   3. saves it as a reel in Admin > Settings > Homepage > Social reels
@@ -35,9 +35,9 @@ function compress(input: string, output: string): void {
     [
       "-y", "-v", "error", "-i", input,
       "-t", "60", // reels are short; cap at a minute
-      "-vf", "scale='min(720,iw)':-2", // never wider than 720 px, keep the shape
-      "-c:v", "libx264", "-preset", "slow", "-crf", "28", "-pix_fmt", "yuv420p",
-      "-c:a", "aac", "-b:a", "96k", "-ac", "2",
+      "-vf", "scale='min(540,iw)':-2", // phone-frame size (about 270 px wide, so 540 is sharp even on retina); never upscale
+      "-c:v", "libx264", "-preset", "slow", "-crf", "30", "-maxrate", "750k", "-bufsize", "1500k", "-pix_fmt", "yuv420p",
+      "-c:a", "aac", "-b:a", "64k", "-ac", "2",
       "-map_metadata", "-1", // drop camera/location info
       "-movflags", "+faststart", // start playing before fully downloaded
       output,
