@@ -1,56 +1,87 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { AnimatePresence, motion, useMotionValue, useReducedMotion, useSpring, useTransform } from "motion/react";
 import { BottlePhoto, bottleHeightRatio } from "./bottle-photo";
 import type { BottleSize } from "@/lib/sizes";
 
-const SPIN_SECONDS = 1.7;
+const SETTLE_SECONDS = 1.1;
 
 /**
- * The hero bottle on a product page. It slides up into place and turns a full
- * circle (a turntable); its label (name, brand, place) fades in as the front
- * comes round. Choosing another size lifts the current bottle away and the new
- * one rises into its place. Tapping the bottle spins it again.
+ * The hero bottle on a product page, using the studio photo. It rises into
+ * place with a gentle swing and the label (name, brand, place) fades in as it
+ * settles. The bottle also tilts a little toward the pointer (or a finger
+ * dragged across it), with a moving shine, so it feels like an object rather
+ * than a flat picture. Choosing another size lifts the current bottle away and
+ * the new one rises into its place.
  */
 export function BottleStage({ size, accent, name, brand }: { size: BottleSize; accent: string; name: string; brand: string }) {
   const reduce = useReducedMotion();
-  const [spin, setSpin] = useState(0);
-  // The turn (size + spin count) whose label has already come round to the front.
   const [labelFor, setLabelFor] = useState<string | null>(null);
-  const turn = `${size}-${spin}`;
 
-  // Hide the label at the start of every turn and bring it back as the front returns.
+  // pointer tilt, smoothed
+  const tx = useMotionValue(0);
+  const ty = useMotionValue(0);
+  const rotY = useSpring(tx, { stiffness: 120, damping: 16 });
+  const rotX = useSpring(ty, { stiffness: 120, damping: 16 });
+  const shine = useMotionValue(50);
+  const shineX = useTransform(useSpring(shine, { stiffness: 120, damping: 20 }), (v) => `${v}%`);
+
   useEffect(() => {
     if (reduce) return;
-    const t = setTimeout(() => setLabelFor(turn), SPIN_SECONDS * 0.62 * 1000);
+    const t = setTimeout(() => setLabelFor(size), SETTLE_SECONDS * 0.55 * 1000);
     return () => clearTimeout(t);
-  }, [turn, reduce]);
+  }, [size, reduce]);
+
+  const onMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (reduce) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width - 0.5;
+    const y = (e.clientY - r.top) / r.height - 0.5;
+    tx.set(x * 34);
+    ty.set(-y * 12);
+    shine.set(50 + x * 80);
+  };
+  const onLeave = () => {
+    tx.set(0);
+    ty.set(0);
+    shine.set(50);
+  };
 
   return (
-    <div className="relative h-full w-full" style={{ perspective: 1100 }}>
+    <div
+      className="relative h-full w-full touch-pan-y"
+      style={{ perspective: 900 }}
+      onPointerMove={onMove}
+      onPointerDown={onMove}
+      onPointerLeave={onLeave}
+      onPointerUp={onLeave}
+    >
       <AnimatePresence mode="popLayout" initial>
         <motion.div
           key={size}
-          initial={reduce ? { opacity: 0 } : { y: "70%", opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
+          initial={reduce ? { opacity: 0 } : { y: "70%", opacity: 0, rotateY: -38 }}
+          animate={{ y: 0, opacity: 1, rotateY: 0 }}
           exit={reduce ? { opacity: 0 } : { y: "-120%", opacity: 0 }}
-          transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: SETTLE_SECONDS, ease: [0.22, 1, 0.36, 1] }}
           className="absolute inset-0 flex items-end justify-center"
         >
-          <motion.button
-            key={spin}
-            type="button"
-            onClick={() => setSpin((n) => n + 1)}
-            aria-label={`Spin the ${name} bottle`}
-            initial={{ rotateY: 0 }}
-            animate={{ rotateY: reduce ? 0 : 360 }}
-            transition={{ duration: SPIN_SECONDS, ease: [0.25, 0.7, 0.2, 1] }}
-            className="flex cursor-pointer items-end justify-center"
-            style={{ height: `${(100 * bottleHeightRatio(size)).toFixed(1)}%`, transformStyle: "preserve-3d" }}
+          <motion.div
+            className="relative flex items-end justify-center"
+            style={{ height: `${(100 * bottleHeightRatio(size)).toFixed(1)}%`, rotateY: rotY, rotateX: rotX, transformStyle: "preserve-3d" }}
           >
-            <BottlePhoto size={size} accent={accent} name={name} brand={brand} priority className="h-full" labelVisible={reduce ? true : labelFor === turn} />
-          </motion.button>
+            <BottlePhoto size={size} accent={accent} name={name} brand={brand} priority className="h-full" labelVisible={reduce ? true : labelFor === size} />
+            {/* a soft highlight that slides across the glass as the bottle tilts */}
+            <motion.span
+              aria-hidden
+              className="pointer-events-none absolute inset-0 mix-blend-soft-light"
+              style={{
+                background: "linear-gradient(105deg, transparent 38%, rgba(255,255,255,0.55) 50%, transparent 62%)",
+                backgroundSize: "260% 100%",
+                backgroundPositionX: shineX,
+              }}
+            />
+          </motion.div>
         </motion.div>
       </AnimatePresence>
     </div>

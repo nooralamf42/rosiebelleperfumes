@@ -7,7 +7,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { Check, ChevronLeft, ChevronRight, Droplets, Minus, Plus, ShieldCheck, Star, Truck } from "lucide-react";
 import { bottleBackdrop } from "./product-media";
 import { BottlePhoto, bottleHeightRatio } from "./bottle-photo";
-import dynamic from "next/dynamic";
+import { BottleStage } from "./bottle-stage";
 
 import { AddToCartButton } from "./add-to-cart-button";
 import { ReviewForm } from "./review-form";
@@ -31,9 +31,6 @@ function freeShippingText(rules: {
   if (mins.length === 0) return "";
   return `Free shipping over ${formatPrice(Math.min(...mins))}`;
 }
-
-// Three.js only loads in the browser, and only on pages that show a bottle.
-const Bottle3D = dynamic(() => import("./bottle-3d").then((m) => m.Bottle3D), { ssr: false });
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -213,7 +210,7 @@ export function ProductDetail({
               </AnimatePresence>
             ) : (
               <div className="absolute inset-0 flex items-end justify-center px-[8%] pb-[6%] pt-[8%]" style={bottleBackdrop(product.accentColor)}>
-                <Bottle3D size={shownBottle} accent={product.accentColor} name={product.name} brand={identity.storeName} />
+                <BottleStage size={shownBottle} accent={product.accentColor} name={product.name} brand={identity.storeName} />
               </div>
             )}
             {product.mood && (
