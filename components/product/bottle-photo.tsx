@@ -23,15 +23,15 @@ export const bottleHeightRatio = (size: BottleSize) => SINGLE[size].heightPx / T
 type LabelProps = { name?: string; brand?: string; origin?: string };
 
 /** Text printed on the blank label. Sizes are relative to the label box, so it scales with the picture. */
-function LabelText({ rect, name = "", brand = "Rosiebelle Perfumes", origin = "KANNAUJ" }: LabelProps & { rect: Rect }) {
+function LabelText({ rect, name = "", brand = "Rosiebelle Perfumes", origin = "KANNAUJ", visible = true }: LabelProps & { rect: Rect; visible?: boolean }) {
   const brandText = brand.toUpperCase().replace(/\s+/g, "");
   const nameFit = Math.max(name.length, 5) * 0.56; // average glyph width in em
   const brandFit = Math.max(brandText.length, 6) * 0.66;
   return (
     <div
       aria-hidden
-      className="absolute mix-blend-multiply [container-type:size]"
-      style={{ left: `${rect.x * 100}%`, top: `${rect.y * 100}%`, width: `${rect.w * 100}%`, height: `${rect.h * 100}%` }}
+      className="absolute mix-blend-multiply transition-opacity duration-500 [container-type:size]"
+      style={{ opacity: visible ? 1 : 0, left: `${rect.x * 100}%`, top: `${rect.y * 100}%`, width: `${rect.w * 100}%`, height: `${rect.h * 100}%` }}
     >
       <div className="flex h-full flex-col items-center justify-evenly px-[9cqw] text-center text-[#1a1a1a]" style={{ fontFamily: "Arial, Helvetica, sans-serif" }}>
         <span className="block max-w-full whitespace-nowrap font-bold leading-none" style={{ fontSize: `min(13cqw, calc(76cqw / ${nameFit.toFixed(2)}))` }}>
@@ -64,7 +64,8 @@ export function BottlePhoto({
   className,
   style,
   priority,
-}: LabelProps & { size?: BottleSize; accent: string; className?: string; style?: React.CSSProperties; priority?: boolean }) {
+  labelVisible = true,
+}: LabelProps & { size?: BottleSize; accent: string; className?: string; style?: React.CSSProperties; priority?: boolean; labelVisible?: boolean }) {
   const s = SINGLE[size];
   const color = bottleAccent(accent);
   return (
@@ -86,7 +87,7 @@ export function BottlePhoto({
         draggable={false}
         className="absolute inset-0 size-full select-none object-contain drop-shadow-[0_14px_14px_rgba(40,22,10,0.22)]"
       />
-      <LabelText rect={s.label} name={name} brand={brand} origin={origin} />
+      <LabelText rect={s.label} name={name} brand={brand} origin={origin} visible={labelVisible} />
     </div>
   );
 }

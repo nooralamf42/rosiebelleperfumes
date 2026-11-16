@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { Check, ChevronLeft, ChevronRight, Droplets, Minus, Plus, ShieldCheck, Star, Truck } from "lucide-react";
 import { bottleBackdrop } from "./product-media";
 import { BottlePhoto, bottleHeightRatio } from "./bottle-photo";
+import { BottleStage } from "./bottle-stage";
 import { AddToCartButton } from "./add-to-cart-button";
 import { ReviewForm } from "./review-form";
 import { formatPrice, discountPercent } from "@/lib/format";
@@ -208,25 +209,7 @@ export function ProductDetail({
               </AnimatePresence>
             ) : (
               <div className="absolute inset-0 flex items-end justify-center px-[8%] pb-[6%] pt-[8%]" style={bottleBackdrop(product.accentColor)}>
-                <AnimatePresence mode="wait" initial={false}>
-                  <motion.div
-                    key={shownBottle}
-                    initial={{ opacity: 0, y: 18, scale: 0.97 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    transition={{ duration: 0.35, ease }}
-                    className="flex h-full w-full items-end justify-center"
-                  >
-                    <BottlePhoto
-                      size={shownBottle}
-                      accent={product.accentColor}
-                      name={product.name}
-                      brand={identity.storeName}
-                      priority
-                      style={{ height: `${(100 * bottleHeightRatio(shownBottle)).toFixed(1)}%` }}
-                    />
-                  </motion.div>
-                </AnimatePresence>
+                <BottleStage size={shownBottle} accent={product.accentColor} name={product.name} brand={identity.storeName} />
               </div>
             )}
             {product.mood && (
