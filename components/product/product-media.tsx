@@ -1,9 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { AttarBottle, AttarLineup } from "./attar-bottle";
+import { BottlePhoto, BottleRow } from "./bottle-photo";
 import { useSiteSettings } from "@/components/providers/site-settings-provider";
-import { bottleSizesOf, type BottleSize } from "@/lib/sizes";
+import { bottleSizesOf } from "@/lib/sizes";
 import { cn } from "@/lib/utils";
 import type { StoreProduct } from "@/lib/types";
 
@@ -15,8 +15,9 @@ export function bottleBackdrop(accent: string): React.CSSProperties {
 }
 
 /**
- * Product image if one is uploaded, otherwise the illustrated bottles: all
- * the sizes standing side by side, in the perfume's own colour.
+ * Product image if one is uploaded, otherwise the bottle photos: every size
+ * the product comes in, standing side by side in the perfume's own colour,
+ * with the product name printed on each label.
  */
 export function ProductMedia({
   product,
@@ -45,24 +46,22 @@ export function ProductMedia({
   }
 
   const bottleSizes = bottleSizesOf(product);
+  const motion = "transition-transform duration-700 ease-out group-hover:scale-[1.04]";
   return (
-    <div className={cn("absolute inset-0 flex items-end justify-center overflow-hidden px-[5%] pb-[7%]", className)} style={bottleBackdrop(product.accentColor)}>
+    <div className={cn("absolute inset-0 overflow-hidden px-[3%] pb-[7%] pt-[8%]", className)} style={bottleBackdrop(product.accentColor)}>
       {bottleSizes.length > 1 ? (
-        <AttarLineup
+        <BottleRow
           sizes={bottleSizes}
           accent={product.accentColor}
           name={product.name}
           brand={identity.storeName}
-          className="w-full drop-shadow-[0_14px_16px_rgba(40,20,10,0.18)] transition-transform duration-700 ease-out group-hover:scale-[1.035]"
+          priority={priority}
+          className={cn("size-full origin-bottom", motion)}
         />
       ) : (
-        <AttarBottle
-          size={(bottleSizes[0] ?? "12") as BottleSize}
-          accent={product.accentColor}
-          name={product.name}
-          brand={identity.storeName}
-          className="h-[88%] w-auto drop-shadow-[0_14px_16px_rgba(40,20,10,0.18)] transition-transform duration-700 ease-out group-hover:scale-[1.035]"
-        />
+        <div className={cn("flex size-full origin-bottom items-end justify-center", motion)}>
+          <BottlePhoto size={bottleSizes[0]} accent={product.accentColor} name={product.name} brand={identity.storeName} priority={priority} className="h-[88%]" />
+        </div>
       )}
     </div>
   );

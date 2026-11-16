@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
-import { AttarBottle } from "@/components/product/attar-bottle";
+import { BottlePhoto } from "@/components/product/bottle-photo";
 import { cn } from "@/lib/utils";
 
 export default function NotFound() {
@@ -8,7 +8,7 @@ export default function NotFound() {
     <div className="container-page grid min-h-[70vh] place-items-center py-16 text-center">
       <div>
         <div className="mx-auto mb-6 h-48 opacity-90">
-          <AttarBottle size="6" accent="brand-tangerine" name="404" className="h-full w-auto" />
+          <BottlePhoto size="6" accent="brand-tangerine" name="404" className="h-full" />
         </div>
         <p className="text-eyebrow">Evaporated</p>
         <h1 className="mt-3 text-4xl sm:text-5xl">This page isn&apos;t in the apothecary</h1>

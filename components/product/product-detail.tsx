@@ -6,7 +6,7 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { Check, ChevronRight, Droplets, Leaf, Minus, Plus, ShieldCheck, Star, Truck } from "lucide-react";
 import { bottleBackdrop } from "./product-media";
-import { AttarBottle } from "./attar-bottle";
+import { BottlePhoto, bottleHeightRatio } from "./bottle-photo";
 import { AddToCartButton } from "./add-to-cart-button";
 import { ReviewForm } from "./review-form";
 import { formatPrice, discountPercent } from "@/lib/format";
@@ -108,12 +108,13 @@ export function ProductDetail({
                     transition={{ duration: 0.35, ease }}
                     className="flex h-full w-full items-end justify-center"
                   >
-                    <AttarBottle
+                    <BottlePhoto
                       size={shownBottle}
                       accent={product.accentColor}
                       name={product.name}
                       brand={identity.storeName}
-                      className="h-[92%] w-auto drop-shadow-[0_18px_20px_rgba(40,20,10,0.2)]"
+                      priority
+                      style={{ height: `${(88 * bottleHeightRatio(shownBottle)).toFixed(1)}%` }}
                     />
                   </motion.div>
                 </AnimatePresence>
@@ -145,7 +146,15 @@ export function ProductDetail({
                       }`}
                       style={bottleBackdrop(product.accentColor)}
                     >
-                      <AttarBottle size={b} accent={product.accentColor} name={product.name} brand={identity.storeName} className="h-full w-auto" />
+                      <span className="flex h-full w-full items-end justify-center">
+                        <BottlePhoto
+                          size={b}
+                          accent={product.accentColor}
+                          name={product.name}
+                          brand={identity.storeName}
+                          style={{ height: `${(100 * bottleHeightRatio(b)).toFixed(1)}%` }}
+                        />
+                      </span>
                       <span className="absolute left-2 top-2 rounded-full bg-background/80 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.12em]">{b} ml</span>
                     </button>
                   </li>
@@ -388,7 +397,7 @@ export function ProductDetail({
         {reviews.length === 0 && (
           <div className="mt-8 flex items-center gap-4 rounded-3xl border border-dashed border-foreground/15 p-6">
             <div className="relative size-16 shrink-0 overflow-hidden rounded-2xl">
-              <AttarBottle size="12" accent={product.accentColor} name={product.name} brand={identity.storeName} className="size-full" />
+              <BottlePhoto size="12" accent={product.accentColor} name={product.name} brand={identity.storeName} className="h-full" />
             </div>
             <p className="text-sm text-muted-foreground">No reviews yet. Be the first to tell us how {product.name} found its way into your day.</p>
           </div>

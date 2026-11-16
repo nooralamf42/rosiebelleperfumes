@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Loader2, Plus, Trash2 } from "lucide-react";
-import { liquidColor } from "@/components/product/attar-bottle";
+import { liquidColor } from "@/lib/perfume-colors";
 import { formatSizeEntry } from "@/lib/sizes";
 import { saveProduct, deleteProduct } from "@/app/admin/actions";
 import { ImageUploader } from "./image-uploader";
