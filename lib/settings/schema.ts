@@ -307,6 +307,8 @@ export const homepageSchema = z.object({
       eyebrow: text(40, "Follow along"),
       title: text(80, "Seen on social"),
       subtitle: text(160, "Short films from our feed."),
+      /** Profile picture shown on every reel (your Instagram icon). Empty shows the first letter of the handle. */
+      avatarUrl: imageUrl,
       items: z.array(reelItem).max(12, "Up to 12 reels").default([]),
     })
     .prefault({}),

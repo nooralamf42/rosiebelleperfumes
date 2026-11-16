@@ -90,6 +90,7 @@ export function Reels({ content }: { content: HomepageSettings["reels"] }) {
             <ReelPhone
               key={`${reel.videoUrl}-${i}`}
               reel={reel}
+              avatarUrl={content.avatarUrl}
               playing={active === i}
               onToggle={() => setActive(active === i ? null : i)}
               onStop={stop}
@@ -101,7 +102,7 @@ export function Reels({ content }: { content: HomepageSettings["reels"] }) {
   );
 }
 
-function ReelPhone({ reel, playing, onToggle, onStop }: { reel: Reel; playing: boolean; onToggle: () => void; onStop: () => void }) {
+function ReelPhone({ reel, avatarUrl, playing, onToggle, onStop }: { reel: Reel; avatarUrl: string; playing: boolean; onToggle: () => void; onStop: () => void }) {
   const video = useRef<HTMLVideoElement>(null);
   const frame = useRef<HTMLDivElement>(null);
   const [muted, setMuted] = useState(false);
@@ -195,9 +196,15 @@ function ReelPhone({ reel, playing, onToggle, onStop }: { reel: Reel; playing: b
           {/* caption */}
           <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/75 via-black/35 to-transparent px-3.5 pb-4 pt-16 text-white">
             <div className="flex items-center gap-2">
-              <span className="grid size-7 shrink-0 place-items-center rounded-full bg-primary text-xs font-semibold text-primary-foreground ring-1 ring-white/40">
-                {(handle.replace("@", "")[0] ?? "R").toUpperCase()}
-              </span>
+              {avatarUrl ? (
+                // Plain <img>: the owner can paste a picture from any https host.
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={avatarUrl} alt="" loading="lazy" className="size-7 shrink-0 rounded-full bg-white object-cover ring-1 ring-white/60" />
+              ) : (
+                <span className="grid size-7 shrink-0 place-items-center rounded-full bg-primary text-xs font-semibold text-primary-foreground ring-1 ring-white/40">
+                  {(handle.replace("@", "")[0] ?? "R").toUpperCase()}
+                </span>
+              )}
               {handle && <span className="truncate text-sm font-medium">{handle}</span>}
               {reel.link && (
                 <a

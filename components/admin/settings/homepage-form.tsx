@@ -184,6 +184,13 @@ export function HomepageForm({ initial }: { initial: HomepageSettings }) {
             maxLength={160}
           />
         </div>
+        <ImageField
+          label="Profile picture"
+          hint="Your Instagram icon. Shown as the small round picture next to the handle on every reel."
+          value={v.reels.avatarUrl}
+          onChange={(avatarUrl) => sub("reels", { avatarUrl })}
+          error={errors["reels.avatarUrl"]}
+        />
         <ListEditor
           items={v.reels.items}
           onChange={(items) => sub("reels", { items })}
