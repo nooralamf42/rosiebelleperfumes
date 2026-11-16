@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
+import { useLenis } from "@/components/providers/smooth-scroll-provider";
 
 /*
  * Instant feedback for every internal link.
@@ -30,6 +31,11 @@ export function RouteProgress() {
   const [leftFrom, setLeftFrom] = useState<string | null>(null);
   const active = leftFrom !== null && leftFrom === here;
 
+  // Set when a link was tapped that should land at the top of the new page.
+  // Back/forward and links that opt out (data-no-scroll, #hash) leave it false.
+  const scrollOnArrive = useRef(false);
+  const { scrollToTop } = useLenis();
+
   useEffect(() => {
     function onClick(e: MouseEvent) {
       if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
@@ -41,11 +47,22 @@ export function RouteProgress() {
       const target = keyOf(url.pathname, url.search);
       const current = keyOf(window.location.pathname, window.location.search);
       if (target === current) return; // same page or hash-only link
+      scrollOnArrive.current = !url.hash && !a.closest("[data-no-scroll]");
       setLeftFrom(current);
     }
     document.addEventListener("click", onClick, true);
     return () => document.removeEventListener("click", onClick, true);
   }, []);
+
+  // The new URL has arrived: start the page at its top, even if the old one was scrolled down.
+  useEffect(() => {
+    if (!scrollOnArrive.current) return;
+    scrollOnArrive.current = false;
+    scrollToTop();
+    // Once more after paint, in case the page swap moved things.
+    const raf = requestAnimationFrame(() => requestAnimationFrame(scrollToTop));
+    return () => cancelAnimationFrame(raf);
+  }, [here, scrollToTop]);
 
   // Safety net: never leave the bar running if a navigation is cancelled.
   useEffect(() => {

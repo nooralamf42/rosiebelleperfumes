@@ -7,6 +7,7 @@ import { computeTotals } from "@/lib/cart-totals";
 import { useCommerceRules } from "@/components/providers/site-settings-provider";
 import { formatPrice } from "@/lib/format";
 import { CheckoutButton } from "@/components/cart/checkout-button";
+import { CartSkeleton } from "@/components/cart/cart-skeleton";
 import { BottlePhoto } from "@/components/product/bottle-photo";
 import { bottleSizeOf } from "@/lib/sizes";
 import { buttonVariants } from "@/components/ui/button";
@@ -17,9 +18,7 @@ export default function CartPage() {
   const hydrated = useHydrated();
   const totals = computeTotals(lines, useCommerceRules());
 
-  if (!hydrated) {
-    return <div className="container-page min-h-[50vh] py-16" />;
-  }
+  if (!hydrated) return <CartSkeleton />;
 
   if (lines.length === 0) {
     return (

@@ -13,8 +13,9 @@ import "lenis/dist/lenis.css";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-type LenisApi = { stop: () => void; start: () => void };
-const LenisContext = createContext<LenisApi>({ stop: () => {}, start: () => {} });
+type LenisApi = { stop: () => void; start: () => void; scrollToTop: () => void };
+const jumpToTop = () => window.scrollTo(0, 0);
+const LenisContext = createContext<LenisApi>({ stop: () => {}, start: () => {}, scrollToTop: jumpToTop });
 
 export function useLenis() {
   return useContext(LenisContext);
@@ -80,6 +81,11 @@ export function SmoothScrollProvider({ children }: { children: ReactNode }) {
     () => ({
       stop: () => lenisRef.current?.stop(),
       start: () => lenisRef.current?.start(),
+      // Jump (no animation) to the top. Lenis keeps its own scroll position, so it must be told too.
+      scrollToTop: () => {
+        lenisRef.current?.scrollTo(0, { immediate: true, force: true });
+        jumpToTop();
+      },
     }),
     [],
   );

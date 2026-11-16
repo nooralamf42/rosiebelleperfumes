@@ -18,7 +18,7 @@ export const settings: Record<SettingsSection, unknown> = {
     contactPhone: "+91 98765 43210",
     whatsapp: "9876543210",
     address: "Rosiebelle Perfumes, India",
-    socials: { instagram: "https://instagram.com/rosiebelleperfumes", facebook: "", youtube: "", x: "" },
+    socials: { instagram: "https://www.instagram.com/rosiebelleperfume_1/", facebook: "", youtube: "", x: "" },
   },
   theme: {
     preset: "botanical",
@@ -83,10 +83,10 @@ export const settings: Record<SettingsSection, unknown> = {
       title: "Seen on social",
       subtitle: "Short films from our feed. Tap one to play.",
       items: [
-        { videoUrl: "https://res.cloudinary.com/demo/video/upload/dog.mp4", posterUrl: "", handle: "@rosiebelle", caption: "Sunday ritual: one dab, one deep breath.", link: "" },
-        { videoUrl: "https://res.cloudinary.com/demo/video/upload/elephants.mp4", posterUrl: "", handle: "@rosiebelle", caption: "Where our oils come from.", link: "" },
-        { videoUrl: "https://res.cloudinary.com/demo/video/upload/samples/sea-turtle.mp4", posterUrl: "", handle: "@rosiebelle", caption: "Slow mornings with a little attar.", link: "" },
-        { videoUrl: "https://res.cloudinary.com/demo/video/upload/samples/cld-sample-video.mp4", posterUrl: "", handle: "@rosiebelle", caption: "Behind the scenes: bottling day.", link: "" },
+        { videoUrl: "https://res.cloudinary.com/demo/video/upload/dog.mp4", posterUrl: "", handle: "@rosiebelleperfume_1", caption: "Sunday ritual: one dab, one deep breath.", link: "" },
+        { videoUrl: "https://res.cloudinary.com/demo/video/upload/elephants.mp4", posterUrl: "", handle: "@rosiebelleperfume_1", caption: "Where our oils come from.", link: "" },
+        { videoUrl: "https://res.cloudinary.com/demo/video/upload/samples/sea-turtle.mp4", posterUrl: "", handle: "@rosiebelleperfume_1", caption: "Slow mornings with a little attar.", link: "" },
+        { videoUrl: "https://res.cloudinary.com/demo/video/upload/samples/cld-sample-video.mp4", posterUrl: "", handle: "@rosiebelleperfume_1", caption: "Behind the scenes: bottling day.", link: "" },
       ],
     },
     testimonials: {

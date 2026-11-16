@@ -303,6 +303,7 @@ function Pill({ href, label, active }: { href: string; label: string; active: bo
     <Link
       href={href}
       scroll={false}
+      data-no-scroll
       data-active={active}
       className={cn(
         "relative shrink-0 rounded-full px-4 py-2 text-xs font-medium uppercase tracking-[0.12em] transition-colors",
