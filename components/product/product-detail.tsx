@@ -396,7 +396,10 @@ export function ProductDetail({
         </div>
         {reviews.length === 0 && (
           <div className="mt-8 flex items-center gap-4 rounded-3xl border border-dashed border-foreground/15 p-6">
-            <div className="relative size-16 shrink-0 overflow-hidden rounded-2xl">
+            <div
+              className="flex size-20 shrink-0 items-end justify-center overflow-hidden rounded-2xl px-2 pb-2 pt-2.5"
+              style={bottleBackdrop(product.accentColor)}
+            >
               <BottlePhoto size="12" accent={product.accentColor} name={product.name} brand={identity.storeName} className="h-full" />
             </div>
             <p className="text-sm text-muted-foreground">No reviews yet. Be the first to tell us how {product.name} found its way into your day.</p>
