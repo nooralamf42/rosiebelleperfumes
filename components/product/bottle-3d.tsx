@@ -19,19 +19,11 @@ import type { BottleSize } from "@/lib/sizes";
  */
 
 const H = 3.05; // bottle height in scene units (12 gm)
-const R = 0.62; // body radius
-const LABEL_Y = 1.02;
-const LABEL_H = 0.95;
+const R = 0.63; // body radius (corner to centre)
+const LABEL_Y = 1.04;
+const LABEL_H = 0.98;
 const TAU = Math.PI * 2;
 const ease = (t: number) => 1 - Math.pow(1 - t, 3);
-
-function lathe(points: THREE.Vector2[], seg = 64) {
-  return new THREE.LatheGeometry(points, seg);
-}
-
-function curve(a: [number, number], c: [number, number], b: [number, number], n = 14) {
-  return new THREE.QuadraticBezierCurve(new THREE.Vector2(...a), new THREE.Vector2(...c), new THREE.Vector2(...b)).getPoints(n);
-}
 
 function labelTexture(name: string, brand: string, origin: string, maxAniso: number) {
   const W = 2048;
@@ -52,7 +44,7 @@ function labelTexture(name: string, brand: string, origin: string, maxAniso: num
   g.textAlign = "center";
   g.textBaseline = "middle";
   const cx = W / 2;
-  const maxW = 560; // the part of the label that faces the camera
+  const maxW = 640; // the part of the label that faces the camera
 
   // product name, shrunk to fit
   let size = 118;
@@ -91,69 +83,57 @@ function labelTexture(name: string, brand: string, origin: string, maxAniso: num
 
 type Built = { group: THREE.Group; dispose: () => void };
 
+/*
+ * Shape follows the studio photo of the real bottle: an eight-sided glass
+ * body with a thick clear base, perfume inside, a paper band round the middle,
+ * a glossy black neck with two grooves and a flat black lid. Units: 3.05 tall.
+ */
+const FLAT_FRONT = -Math.PI / 8; // eight sides, a flat face toward the camera
+const BODY_TOP = 2.1;
+const NECK_TOP = 2.76;
+
 function buildBottle(size: BottleSize, accent: string, name: string, brand: string, maxAniso: number, shared: { glass: THREE.Material; cap: THREE.Material; ring: THREE.Material; env: THREE.Texture }): Built {
   const group = new THREE.Group();
   const geos: THREE.BufferGeometry[] = [];
   const mats: THREE.Material[] = [];
   const keep = <T extends THREE.BufferGeometry>(g: T) => (geos.push(g), g);
+  const prism = (r: number, h: number, y: number, mat: THREE.Material, order: number, open = false) => {
+    const m = new THREE.Mesh(keep(new THREE.CylinderGeometry(r, r, h, 8, 1, open, FLAT_FRONT)), mat);
+    m.position.y = y + h / 2;
+    m.renderOrder = order;
+    group.add(m);
+    return m;
+  };
 
-  // glass: thick base, straight body, curved shoulder, neck
-  const outer: THREE.Vector2[] = [
-    new THREE.Vector2(0, 0),
-    new THREE.Vector2(R * 0.9, 0),
-    new THREE.Vector2(R * 0.98, 0.05),
-    new THREE.Vector2(R, 0.12),
-    new THREE.Vector2(R, 1.95),
-    ...curve([R, 1.95], [R, 2.3], [0.33, 2.36]),
-    new THREE.Vector2(0.3, 2.4),
-    new THREE.Vector2(0.3, 2.6),
-    new THREE.Vector2(0, 2.6),
-  ];
-  const glass = new THREE.Mesh(keep(lathe(outer)), shared.glass);
-  glass.renderOrder = 3;
-  group.add(glass);
-
-  // thick glass block in the base
-  const baseBlock = new THREE.Mesh(keep(new THREE.CylinderGeometry(R - 0.02, R - 0.02, 0.3, 64)), shared.glass);
-  baseBlock.position.y = 0.17;
-  baseBlock.renderOrder = 3;
-  group.add(baseBlock);
+  // glass body (clear) and a heavier, more visible block of glass at the base
+  prism(R, BODY_TOP, 0, shared.glass, 3);
+  prism(R + 0.004, 0.42, 0, shared.glass, 3);
 
   // perfume
   const liquidMat = new THREE.MeshPhysicalMaterial({
     // a little darker than the swatch: studio light brightens it on screen
-    color: new THREE.Color(liquidColor(accent)).multiplyScalar(0.62),
+    color: new THREE.Color(liquidColor(accent)).multiplyScalar(0.8),
     roughness: 0.25,
-    metalness: 0,
     clearcoat: 0.5,
     clearcoatRoughness: 0.12,
     transparent: true,
     opacity: 0.95,
     envMap: shared.env,
-    envMapIntensity: 0.3,
+    envMapIntensity: 0.5,
   });
   mats.push(liquidMat);
-  const liquid: THREE.Vector2[] = [
-    new THREE.Vector2(0, 0.32),
-    new THREE.Vector2(R - 0.1, 0.32),
-    new THREE.Vector2(R - 0.08, 0.4),
-    new THREE.Vector2(R - 0.08, 1.9),
-    ...curve([R - 0.08, 1.9], [R - 0.08, 2.18], [0.2, 2.24]),
-    new THREE.Vector2(0, 2.24),
-  ];
-  const liq = new THREE.Mesh(keep(lathe(liquid)), liquidMat);
-  liq.renderOrder = 1;
-  group.add(liq);
+  prism(R - 0.06, BODY_TOP - 0.12 - 0.5, 0.5, liquidMat, 1);
 
-  // paper label, wrapped round the front of the body
-  const arc = TAU * 0.9;
-  const labelGeo = keep(new THREE.CylinderGeometry(R + 0.012, R + 0.012, LABEL_H, 96, 1, true, -arc / 2, arc));
+  // paper band, eight flat faces like the glass under it
+  const labelGeo = keep(new THREE.CylinderGeometry(R + 0.014, R + 0.014, LABEL_H, 8, 1, true, FLAT_FRONT));
+  const labelTex = labelTexture(name, brand, "KANNAUJ", maxAniso);
+  labelTex.wrapS = THREE.RepeatWrapping;
+  labelTex.offset.x = 0.5 - 1 / 16; // centre the printed part on the front face
   const labelMat = new THREE.MeshStandardMaterial({
-    map: labelTexture(name, brand, "KANNAUJ", maxAniso),
+    map: labelTex,
     envMap: shared.env,
     envMapIntensity: 0.35,
     roughness: 0.62,
-    metalness: 0,
     side: THREE.DoubleSide,
   });
   mats.push(labelMat);
@@ -162,28 +142,23 @@ function buildBottle(size: BottleSize, accent: string, name: string, brand: stri
   label.renderOrder = 2;
   group.add(label);
 
-  // neck ring + cap
-  const ring = new THREE.Mesh(keep(new THREE.CylinderGeometry(0.34, 0.34, 0.07, 48)), shared.ring);
-  ring.position.y = 2.5;
-  group.add(ring);
-  const capPts: THREE.Vector2[] = [
-    new THREE.Vector2(0, 2.52),
-    new THREE.Vector2(0.37, 2.52),
-    new THREE.Vector2(0.37, 2.98),
-    ...curve([0.37, 2.98], [0.37, H], [0.3, H], 6),
+  // black neck, two grooves, flat lid with a rounded edge
+  const neck = new THREE.Mesh(keep(new THREE.CylinderGeometry(0.365, 0.365, NECK_TOP - BODY_TOP, 48)), shared.cap);
+  neck.position.y = BODY_TOP + (NECK_TOP - BODY_TOP) / 2;
+  group.add(neck);
+  for (const y of [2.29, 2.7]) {
+    const g = new THREE.Mesh(keep(new THREE.CylinderGeometry(0.378, 0.378, 0.05, 48)), shared.ring);
+    g.position.y = y;
+    group.add(g);
+  }
+  const lidPts = [
+    new THREE.Vector2(0, NECK_TOP),
+    new THREE.Vector2(0.4, NECK_TOP),
+    new THREE.Vector2(0.4, H - 0.07),
+    ...new THREE.QuadraticBezierCurve(new THREE.Vector2(0.4, H - 0.07), new THREE.Vector2(0.4, H), new THREE.Vector2(0.33, H)).getPoints(6),
     new THREE.Vector2(0, H),
   ];
-  const cap = new THREE.Mesh(keep(lathe(capPts, 64)), shared.cap);
-  group.add(cap);
-  // fine ribs on the cap
-  const ribGeo = keep(new THREE.BoxGeometry(0.018, 0.34, 0.03));
-  for (let i = 0; i < 32; i++) {
-    const rib = new THREE.Mesh(ribGeo, shared.cap);
-    const a = (i / 32) * TAU;
-    rib.position.set(Math.sin(a) * 0.372, 2.76, Math.cos(a) * 0.372);
-    rib.rotation.y = a;
-    group.add(rib);
-  }
+  group.add(new THREE.Mesh(keep(new THREE.LatheGeometry(lidPts, 64)), shared.cap));
 
   // smaller sizes are smaller bottles, standing on the same floor
   group.scale.setScalar(bottleHeightRatio(size));
@@ -271,7 +246,7 @@ export function Bottle3D({ size, accent, name, brand }: { size: BottleSize; acce
         side: THREE.DoubleSide,
         depthWrite: false,
       }),
-      cap: new THREE.MeshPhysicalMaterial({ color: "#0d0d0f", envMap: envTex, envMapIntensity: 1, roughness: 0.28, metalness: 0.15, clearcoat: 0.8, clearcoatRoughness: 0.15 }),
+      cap: new THREE.MeshPhysicalMaterial({ color: "#08080a", envMap: envTex, envMapIntensity: 1.4, roughness: 0.14, metalness: 0.1, clearcoat: 1, clearcoatRoughness: 0.06 }),
       env: envTex,
       ring: new THREE.MeshStandardMaterial({ color: "#2a2a2e", envMap: envTex, roughness: 0.35, metalness: 0.6 }),
     };
