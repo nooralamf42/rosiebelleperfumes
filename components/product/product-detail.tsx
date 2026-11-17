@@ -10,6 +10,7 @@ import { BottlePhoto, bottleHeightRatio } from "./bottle-photo";
 import { BottleStage } from "./bottle-stage";
 
 import { AddToCartButton } from "./add-to-cart-button";
+import { BuyNowButton } from "./buy-now-button";
 import { ReviewForm } from "./review-form";
 import { formatPrice, discountPercent } from "@/lib/format";
 import { noteChips, scentProfile } from "@/lib/scent";
@@ -286,62 +287,73 @@ export function ProductDetail({
           <div className="hidden md:block">{description}</div>
 
           <div ref={buyRef} className="md:mt-6">
+            {/* size + quantity */}
+            <div className="flex items-end justify-between gap-3">
+              <p className="text-sm font-medium">{sizeList.length > 0 ? "Size" : "Quantity"}</p>
+              <div className="flex shrink-0 items-center gap-0.5 rounded-full border border-foreground/15 p-0.5">
+                <button
+                  onClick={() => setQty((q) => Math.max(1, q - 1))}
+                  className="grid size-8 place-items-center rounded-full hover:bg-muted"
+                  aria-label="Decrease quantity"
+                >
+                  <Minus className="size-3.5" />
+                </button>
+                <span className="w-6 text-center text-sm font-medium tabular-nums" aria-live="polite">{qty}</span>
+                <button
+                  onClick={() => setQty((q) => q + 1)}
+                  className="grid size-8 place-items-center rounded-full hover:bg-muted"
+                  aria-label="Increase quantity"
+                >
+                  <Plus className="size-3.5" />
+                </button>
+              </div>
+            </div>
             {sizeList.length > 0 && (
-              <div>
-                <p className="text-sm font-medium">Size</p>
-                <div className="mt-2 grid grid-cols-3 gap-2" role="radiogroup" aria-label="Size">
-                  {sizeList.map((s) => {
-                    const on = selectedSize === s.label;
-                    return (
-                      <button
-                        key={s.label}
-                        type="button"
-                        role="radio"
-                        aria-checked={on}
-                        onClick={() => setSelectedSize(s.label)}
-                        className={
-                          "rounded-2xl border px-2 py-2.5 text-center transition-all md:py-3 " +
-                          (on ? "border-primary bg-primary text-primary-foreground shadow-soft" : "border-foreground/15 hover:border-foreground")
-                        }
-                      >
-                        <span className="block text-sm font-medium">{s.label}</span>
-                        <span className={"mt-0.5 block text-xs tabular-nums " + (on ? "opacity-85" : "text-muted-foreground")}>{formatPrice(s.price)}</span>
-                      </button>
-                    );
-                  })}
-                </div>
+              <div className="mt-2 grid grid-cols-3 gap-2" role="radiogroup" aria-label="Size">
+                {sizeList.map((s) => {
+                  const on = selectedSize === s.label;
+                  return (
+                    <button
+                      key={s.label}
+                      type="button"
+                      role="radio"
+                      aria-checked={on}
+                      onClick={() => setSelectedSize(s.label)}
+                      className={
+                        "rounded-2xl border px-2 py-2.5 text-center transition-all md:py-3 " +
+                        (on ? "border-primary bg-primary text-primary-foreground shadow-soft" : "border-foreground/15 hover:border-foreground")
+                      }
+                    >
+                      <span className="block text-sm font-medium">{s.label}</span>
+                      <span className={"mt-0.5 block text-xs tabular-nums " + (on ? "opacity-85" : "text-muted-foreground")}>{formatPrice(s.price)}</span>
+                    </button>
+                  );
+                })}
               </div>
             )}
 
-            {/* quantity + add to bag */}
-            <div className="mt-4 flex items-center gap-3">
-              <div className="flex shrink-0 items-center gap-0.5 rounded-full border border-foreground/15 p-1">
-                <button
-                  onClick={() => setQty((q) => Math.max(1, q - 1))}
-                  className="grid size-10 place-items-center rounded-full hover:bg-muted"
-                  aria-label="Decrease quantity"
-                >
-                  <Minus className="size-4" />
-                </button>
-                <span className="w-7 text-center text-sm font-medium tabular-nums">{qty}</span>
-                <button
-                  onClick={() => setQty((q) => q + 1)}
-                  className="grid size-10 place-items-center rounded-full hover:bg-muted"
-                  aria-label="Increase quantity"
-                >
-                  <Plus className="size-4" />
-                </button>
-              </div>
+            {/* Add to bag (outlined) beside Buy now (solid, the main action) */}
+            <div className="mt-4 grid grid-cols-2 gap-2.5">
               <AddToCartButton
                 product={product}
                 qty={qty}
                 selectedSize={selectedSize}
                 unitPrice={unitPrice}
+                variant="outline"
                 size="lg"
-                className="h-12 min-w-0 flex-1 rounded-full text-sm shadow-soft"
+                className="h-12 min-w-0 border-foreground/25 px-3 text-sm"
               >
-                Add to bag · {formatPrice(unitPrice * qty)}
+                Add to bag
               </AddToCartButton>
+              <BuyNowButton
+                product={product}
+                qty={qty}
+                selectedSize={selectedSize}
+                unitPrice={unitPrice}
+                className="h-12 min-w-0 px-3 text-sm shadow-soft"
+              >
+                Buy now · {formatPrice(unitPrice * qty)}
+              </BuyNowButton>
             </div>
 
             <ul className="mt-4 grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
@@ -499,24 +511,27 @@ export function ProductDetail({
             transition={{ duration: 0.3, ease }}
             className="fixed inset-x-0 bottom-0 z-40 border-t border-foreground/10 bg-background/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_30px_-12px_rgba(0,0,0,0.25)] backdrop-blur md:hidden"
           >
-            <div className="container-page flex items-center gap-3 py-2.5">
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium">{product.name}</p>
-                <p className="text-xs text-muted-foreground">
-                  {selectedSize ? `${selectedSize} · ` : ""}
-                  {formatPrice(unitPrice * qty)}
-                </p>
-              </div>
+            <div className="container-page grid grid-cols-2 gap-2.5 py-2.5">
               <AddToCartButton
                 product={product}
                 qty={qty}
                 selectedSize={selectedSize}
                 unitPrice={unitPrice}
+                variant="outline"
                 size="lg"
-                className="h-11 shrink-0 rounded-full px-6 text-sm shadow-soft"
+                className="h-11 min-w-0 border-foreground/25 px-3 text-sm"
               >
                 Add to bag
               </AddToCartButton>
+              <BuyNowButton
+                product={product}
+                qty={qty}
+                selectedSize={selectedSize}
+                unitPrice={unitPrice}
+                className="h-11 min-w-0 px-3 text-sm shadow-soft"
+              >
+                Buy now · {formatPrice(unitPrice * qty)}
+              </BuyNowButton>
             </div>
           </motion.div>
         )}
