@@ -19,10 +19,17 @@ export function Preloader({ name }: { name: string }) {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduced || sessionStorage.getItem(KEY)) return;
-    sessionStorage.setItem(KEY, "1");
+    if (reduced || sessionStorage.getItem(KEY)) {
+      document.documentElement.removeAttribute("data-intro");
+      return;
+    }
     // Defer to the next frame so the first paint (and hydration) stay unblocked.
-    const raf = requestAnimationFrame(() => setShow(true));
+    // The "seen" flag is only written once the intro really starts, so React's
+    // double-run of effects in development can't swallow it.
+    const raf = requestAnimationFrame(() => {
+      sessionStorage.setItem(KEY, "1");
+      setShow(true);
+    });
     return () => cancelAnimationFrame(raf);
   }, []);
 
@@ -30,6 +37,8 @@ export function Preloader({ name }: { name: string }) {
     if (!show || !root.current) return;
     const el = root.current;
     document.documentElement.style.overflow = "hidden";
+    // The intro is on screen now: the early cover (see globals.css) can go.
+    document.documentElement.removeAttribute("data-intro");
 
     const tl = gsap.timeline({
       defaults: { ease: "power3.out" },

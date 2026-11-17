@@ -1,18 +1,54 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { ShieldAlert } from "lucide-react";
 import { getAdminAccess } from "@/lib/admin-access";
 import { AdminSidebar } from "@/components/admin/sidebar";
+import { FormCardSkeleton, HeadingSkeleton } from "@/components/admin/admin-skeletons";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export const metadata = { title: "Admin" };
 export const dynamic = "force-dynamic";
 
-export default async function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+/*
+ * The layout itself must not wait for the access check. If it did, nothing
+ * below the root loading screen could show while it waited, and a hard
+ * refresh would flash the *home page* skeleton here. Instead the layout
+ * renders at once and only the gated part suspends, behind a skeleton that
+ * already has the admin heading and sidebar in place.
+ */
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <Suspense fallback={<AdminShell><HeadingSkeleton /><FormCardSkeleton fields={3} className="mt-6" /></AdminShell>}>
+      <AdminGate>{children}</AdminGate>
+    </Suspense>
+  );
+}
+
+function AdminShell({ children, demo = false }: { children: React.ReactNode; demo?: boolean }) {
+  return (
+    <div className="container-page py-6 sm:py-10">
+      <div className="flex items-center justify-between">
+        <h1 className="font-heading text-2xl font-bold sm:text-3xl">Store admin</h1>
+      </div>
+
+      {demo && (
+        <div className="mt-4 rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <strong>Preview mode.</strong> Connect Clerk + a Neon database to enable
+          editing and see live orders. You&apos;re viewing demo data.
+        </div>
+      )}
+
+      {/* minmax(0,…) + min-w-0 keep wide content (tables, menus) from stretching the page on phones. */}
+      <div className="mt-5 grid grid-cols-[minmax(0,1fr)] gap-6 sm:mt-6 lg:grid-cols-[200px_minmax(0,1fr)] lg:gap-8">
+        <AdminSidebar />
+        <div className="min-w-0">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+async function AdminGate({ children }: { children: React.ReactNode }) {
   const { allowed, demo } = await getAdminAccess();
 
   if (!allowed) {
@@ -35,24 +71,5 @@ export default async function AdminLayout({
     );
   }
 
-  return (
-    <div className="container-page py-6 sm:py-10">
-      <div className="flex items-center justify-between">
-        <h1 className="font-heading text-2xl font-bold sm:text-3xl">Store admin</h1>
-      </div>
-
-      {demo && (
-        <div className="mt-4 rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          <strong>Preview mode.</strong> Connect Clerk + a Neon database to enable
-          editing and see live orders. You&apos;re viewing demo data.
-        </div>
-      )}
-
-      {/* minmax(0,…) + min-w-0 keep wide content (tables, menus) from stretching the page on phones. */}
-      <div className="mt-5 grid grid-cols-[minmax(0,1fr)] gap-6 sm:mt-6 lg:grid-cols-[200px_minmax(0,1fr)] lg:gap-8">
-        <AdminSidebar />
-        <div className="min-w-0">{children}</div>
-      </div>
-    </div>
-  );
+  return <AdminShell demo={demo}>{children}</AdminShell>;
 }

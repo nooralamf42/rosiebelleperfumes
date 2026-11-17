@@ -391,3 +391,17 @@ html[data-style="minimal"] h1 svg {
   cursor: grab;
 }
 .range-thumb::-moz-range-track { background: transparent; }
+
+/* First visit: a plain cover from the very first paint until the intro animation mounts.
+   The animation below hides it by itself after a few seconds, so it can never get stuck. */
+html[data-intro="1"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 199;
+  background: var(--primary);
+  animation: intro-cover-out 0.01s 4s forwards;
+}
+@keyframes intro-cover-out {
+  to { visibility: hidden; opacity: 0; }
+}

@@ -102,6 +102,14 @@ export default async function RootLayout({
       <head>
         {/* Theme colors from admin settings; values are validated hex (safe to inline). */}
         <style id="store-theme" dangerouslySetInnerHTML={{ __html: themeToCss(settings.theme) }} />
+        {/* First visit of a session: mark the page before it paints, so a plain brand-coloured cover
+            hides the page (and any loading skeleton) until the intro animation takes over.
+            Same rule as <Preloader>: once per session, never for reduced motion. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{if(!sessionStorage.getItem("rosiebelle:intro-seen")&&!matchMedia("(prefers-reduced-motion: reduce)").matches)document.documentElement.setAttribute("data-intro","1")}catch(e){}`,
+          }}
+        />
       </head>
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <SiteSettingsProvider value={clientSettings}>
