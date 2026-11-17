@@ -173,6 +173,12 @@ export async function assignAwb(shipmentId: string): Promise<AwbResult> {
   });
 
   const text = await res.text();
+  // An empty wallet is by far the most common reason a courier can't be booked.
+  if (/wallet|balance|recharge/i.test(text) && !/awb_code"\s*:\s*"?\d/.test(text)) {
+    throw new Error(
+      "Shiprocket couldn't book a courier: your Shiprocket wallet balance is too low. Recharge it in Shiprocket (Billing > Wallet), then press Retry.",
+    );
+  }
   if (!res.ok) {
     throw new Error(`Shiprocket AWB assignment failed: ${res.status} ${text.slice(0, 200)}`);
   }

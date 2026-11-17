@@ -88,8 +88,11 @@ export function OrderActions({
     setLoading(false);
     if (res.ok) {
       if (res.warning) {
+        // Stays on screen until closed: this is something the owner has to act on.
         toast.warning(res.warning, {
-          description: "You can retry to complete the remaining steps.",
+          description: "The Shiprocket order is created. Fix this, then press Retry to finish.",
+          duration: Infinity,
+          closeButton: true,
         });
       } else if (res.labelUrl) {
         toast.success("Order fulfilled — label ready to download");
@@ -134,6 +137,11 @@ export function OrderActions({
           )}
           {isRetry ? "Retry" : "Fulfill"}
         </Button>
+      )}
+      {needsWork && isRetry && !awbCode && (
+        <p className="max-w-[16rem] text-right text-xs text-muted-foreground">
+          Order created in Shiprocket, but no courier is booked yet. Usually the Shiprocket wallet is empty: recharge it, then press Retry.
+        </p>
       )}
 
       {canMarkShipped && (
