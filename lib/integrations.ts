@@ -6,7 +6,7 @@ import { CACHE_TAGS } from "./cache-tags";
 import { canEncryptSecrets, decryptSecret, encryptSecret } from "./secret-box";
 
 /*
- * Razorpay (payments) and Shiprocket (shipping) are optional. Each is OFF
+ * Razorpay (payments), Shiprocket (shipping) and Resend (order emails) are optional. Each is OFF
  * until its credentials exist, from Admin → Settings → Integrations (stored
  * encrypted in the database) or, as a fallback, from environment variables.
  * A value saved in Settings wins over the environment.
@@ -34,6 +34,11 @@ export const storedIntegrationsSchema = z.object({
       webhookToken: z.string().default(""),
     })
     .prefault({}),
+  resend: z
+    .object({
+      apiKey: z.string().default(""),
+    })
+    .prefault({}),
 });
 export type StoredIntegrations = z.infer<typeof storedIntegrationsSchema>;
 
@@ -45,11 +50,15 @@ export type ShiprocketCredentials = {
   webhookToken: string;
 };
 
+export type ResendCredentials = { apiKey: string };
+
 export type Integrations = {
   /** null = payments are off. */
   razorpay: RazorpayCredentials | null;
   /** null = shipping integration is off. */
   shiprocket: ShiprocketCredentials | null;
+  /** null = order emails are off. */
+  resend: ResendCredentials | null;
 };
 
 export async function readStoredIntegrations(): Promise<StoredIntegrations> {
@@ -81,9 +90,12 @@ export function resolveIntegrations(stored: StoredIntegrations): Integrations {
   const pickupLocation = s.pickupLocation || env("SHIPROCKET_PICKUP_LOCATION") || "Primary";
   const webhookToken = secret(s.webhookToken) || env("SHIPROCKET_WEBHOOK_TOKEN");
 
+  const resendKey = secret(stored.resend.apiKey) || env("RESEND_API_KEY");
+
   return {
     razorpay: keyId && keySecret ? { keyId, keySecret, webhookSecret } : null,
     shiprocket: email && password ? { email, password, pickupLocation, webhookToken } : null,
+    resend: resendKey ? { apiKey: resendKey } : null,
   };
 }
 
@@ -142,13 +154,17 @@ export async function getIntegrationsStatus() {
       pickupLocation: s.pickupLocation || env("SHIPROCKET_PICKUP_LOCATION"),
       webhookToken: field(Boolean(secret(s.webhookToken)), "SHIPROCKET_WEBHOOK_TOKEN"),
     },
+    resend: {
+      active: Boolean(resolved.resend),
+      apiKey: field(Boolean(secret(stored.resend.apiKey)), "RESEND_API_KEY"),
+    },
   };
 }
 export type IntegrationsStatus = Awaited<ReturnType<typeof getIntegrationsStatus>>;
 
 /* ---- Saving (used by the admin action; pure so it can be tested) ---- */
 
-export type IntegrationName = "razorpay" | "shiprocket";
+export type IntegrationName = "razorpay" | "shiprocket" | "resend";
 
 export const razorpayInputSchema = z.object({
   keyId: z
@@ -175,8 +191,17 @@ export const shiprocketInputSchema = z.object({
     .refine((v) => v === "" || v.length >= 16, "Use at least 16 characters (a long random token)"),
 });
 
+export const resendInputSchema = z.object({
+  apiKey: z
+    .string()
+    .trim()
+    .max(200)
+    .refine((v) => v === "" || /^re_[A-Za-z0-9_]+$/.test(v), "A Resend API key starts with re_"),
+});
+
 export type RazorpayInput = z.infer<typeof razorpayInputSchema>;
 export type ShiprocketInput = z.infer<typeof shiprocketInputSchema>;
+export type ResendInput = z.infer<typeof resendInputSchema>;
 
 /**
  * Apply one integration's form to what's stored. Plain fields are replaced
@@ -186,13 +211,14 @@ export type ShiprocketInput = z.infer<typeof shiprocketInputSchema>;
 export function mergeIntegration(
   stored: StoredIntegrations,
   which: IntegrationName,
-  input: RazorpayInput | ShiprocketInput | null,
+  input: RazorpayInput | ShiprocketInput | ResendInput | null,
 ): StoredIntegrations {
   const next: StoredIntegrations = structuredClone(stored);
   if (input === null) {
     const empty = storedIntegrationsSchema.parse({});
     if (which === "razorpay") next.razorpay = empty.razorpay;
-    else next.shiprocket = empty.shiprocket;
+    else if (which === "shiprocket") next.shiprocket = empty.shiprocket;
+    else next.resend = empty.resend;
     return next;
   }
   const keep = (newValue: string, old: string) => (newValue === "" ? old : encryptSecret(newValue));
@@ -203,6 +229,9 @@ export function mergeIntegration(
       keySecret: keep(i.keySecret, stored.razorpay.keySecret),
       webhookSecret: keep(i.webhookSecret, stored.razorpay.webhookSecret),
     };
+  } else if (which === "resend") {
+    const i = input as ResendInput;
+    next.resend = { apiKey: keep(i.apiKey, stored.resend.apiKey) };
   } else {
     const i = input as ShiprocketInput;
     next.shiprocket = {

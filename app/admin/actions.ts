@@ -7,7 +7,7 @@ import { assertAdmin } from "@/lib/admin-guard";
 import { productSchema, type ProductInput } from "@/lib/validators";
 import { fulfillOrder, markOrderDelivered, markOrderShipped, type ManualShipInput } from "@/lib/orders";
 import { refundOrder, RefundError } from "@/lib/refunds";
-import { emailEnabled, sendOrderEmail, type OrderEmailKind } from "@/lib/email";
+import { isEmailEnabled, sendOrderEmail, type OrderEmailKind } from "@/lib/email";
 import { ORDER_EMAIL_KINDS } from "@/lib/email/order-email";
 
 type ActionResult = { ok: boolean; error?: string; id?: string };
@@ -165,7 +165,9 @@ export async function sendOrderEmailAction(
     return { ok: false, error: "Only admins can send emails." };
   }
   if (!ORDER_EMAIL_KINDS.includes(kind)) return { ok: false, error: "Unknown email." };
-  if (!emailEnabled) return { ok: false, error: "Email isn't set up yet — add RESEND_API_KEY." };
+  if (!(await isEmailEnabled())) {
+    return { ok: false, error: "Email isn't set up yet: add your Resend API key in Settings > Integrations." };
+  }
   try {
     await sendOrderEmail(orderId, kind, { manual: true });
     revalidatePath("/admin/orders");

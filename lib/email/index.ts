@@ -4,14 +4,29 @@ import { render } from "@react-email/components";
 import { db, hasDatabase } from "@/lib/db";
 import { getSettings, siteBaseUrl } from "@/lib/settings";
 import { orderLinkToken } from "@/lib/order-access";
+import { getIntegrations } from "@/lib/integrations";
 import { OrderEmail, type OrderEmailKind } from "./order-email";
 import type { IdentitySettings } from "@/lib/settings/schema";
 
 export type { OrderEmailKind } from "./order-email";
 
-export const emailEnabled = Boolean(process.env.RESEND_API_KEY);
+/*
+ * The Resend key comes from Admin → Settings → Integrations (encrypted in the
+ * database) or the RESEND_API_KEY environment variable. It is read when an
+ * email is sent, never while a page loads, so it adds no delay for shoppers.
+ */
+let cachedClient: { key: string; client: Resend } | null = null;
 
-const resend = emailEnabled ? new Resend(process.env.RESEND_API_KEY) : null;
+export async function getResend(): Promise<Resend | null> {
+  const { resend } = await getIntegrations();
+  if (!resend) return null;
+  if (cachedClient?.key !== resend.apiKey) cachedClient = { key: resend.apiKey, client: new Resend(resend.apiKey) };
+  return cachedClient.client;
+}
+
+export async function isEmailEnabled(): Promise<boolean> {
+  return Boolean((await getIntegrations()).resend);
+}
 
 /**
  * "Store Name <address>". The name is always the store name from Settings;
@@ -59,7 +74,8 @@ export async function sendOrderEmail(
   kind: OrderEmailKind,
   opts: SendOptions = {},
 ): Promise<void> {
-  if (!resend) throw new Error("Email isn't set up (RESEND_API_KEY is missing).");
+  const resend = await getResend();
+  if (!resend) throw new Error("Email isn't set up: add your Resend API key in Admin > Settings > Integrations.");
   if (!hasDatabase) return;
 
   const [order, settings] = await Promise.all([
@@ -119,13 +135,13 @@ export async function sendOrderEmail(
 /**
  * Send an order email after the current response finishes, so a slow email
  * service never delays the customer. Must run inside a request (Route
- * Handler, Server Action or Server Component). No-op without Resend.
+ * Handler, Server Action or Server Component). Does nothing without a Resend key.
  */
 export function queueOrderEmail(orderId: string, kind: OrderEmailKind, opts: SendOptions = {}): void {
-  if (!emailEnabled) return;
-  after(() =>
-    sendOrderEmail(orderId, kind, opts).catch((err) =>
+  after(async () => {
+    if (!(await isEmailEnabled())) return;
+    await sendOrderEmail(orderId, kind, opts).catch((err) =>
       console.error(`Order ${orderId}: ${kind} email failed`, err),
-    ),
-  );
+    );
+  });
 }

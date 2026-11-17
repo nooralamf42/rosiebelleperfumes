@@ -154,7 +154,7 @@ function IntegrationActions({
   onSaved,
   setErrors,
 }: {
-  which: "razorpay" | "shiprocket";
+  which: "razorpay" | "shiprocket" | "resend";
   busy: string | null;
   setBusy: (v: string | null) => void;
   getFields: () => Record<string, string>;
@@ -180,7 +180,7 @@ function IntegrationActions({
     setBusy("test");
     const res = await testIntegrationAction(which);
     setBusy(null);
-    if (res.ok) toast.success("Connection works");
+    if (res.ok) toast.success(which === "resend" ? "Test email sent — check your inbox" : "Connection works");
     else toast.error(res.error);
   }
   async function remove() {
@@ -241,6 +241,10 @@ export function IntegrationsForm({
   const [srPickup, setSrPickup] = useState(sr.pickupLocation);
   const [srToken, setSrToken] = useState("");
   const [srErrors, setSrErrors] = useState<Record<string, string>>({});
+
+  const em = status.resend;
+  const [emKey, setEmKey] = useState("");
+  const [emErrors, setEmErrors] = useState<Record<string, string>>({});
 
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -372,6 +376,43 @@ export function IntegrationsForm({
             setSrToken("");
           })}
           setErrors={setSrErrors}
+        />
+      </SettingsCard>
+
+      <SettingsCard
+        title="Order emails — Resend"
+        description="Off until you add your Resend key. While it's off, customers don't get confirmation, shipping or refund emails (you can still see every order in the admin)."
+      >
+        <div className="flex items-center gap-2">
+          <StatusPill on={em.active} offText="Off — no order emails are sent" />
+        </div>
+        <Field
+          label="Resend API key"
+          error={emErrors.apiKey}
+          hint={secretHint(em.apiKey) ?? "resend.com → API Keys → Create API key (“Sending access” is enough). It starts with re_."}
+        >
+          <Input
+            type="password"
+            value={emKey}
+            onChange={(e) => setEmKey(e.target.value)}
+            placeholder={secretPlaceholder(em.apiKey) || "re_…"}
+            autoComplete="new-password"
+          />
+        </Field>
+        <p className="rounded-xl border border-dashed p-3 text-xs text-muted-foreground">
+          <span className="text-sm font-medium text-foreground">Sender address:</span> emails arrive from the address set in Settings → Store &amp; SEO →
+          Order emails. That address&apos;s domain must be verified in Resend (resend.com → Domains, then add the DNS records it shows). Until then Resend
+          only delivers to your own Resend account email. <strong>Test connection</strong> sends a real test email to your Contact email.
+        </p>
+        <IntegrationActions
+          which="resend"
+          busy={busy}
+          setBusy={setBusy}
+          getFields={() => ({ apiKey: emKey })}
+          canTest={em.active}
+          canRemove={em.apiKey.source === "settings"}
+          onSaved={afterSave(() => setEmKey(""))}
+          setErrors={setEmErrors}
         />
       </SettingsCard>
     </div>

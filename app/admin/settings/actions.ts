@@ -12,6 +12,7 @@ import {
   mergeIntegration,
   razorpayInputSchema,
   readStoredIntegrations,
+  resendInputSchema,
   shiprocketInputSchema,
   type IntegrationName,
 } from "@/lib/integrations";
@@ -96,7 +97,7 @@ export async function saveIntegrationAction(
 
   let input = null;
   if (fields) {
-    const schema = which === "razorpay" ? razorpayInputSchema : shiprocketInputSchema;
+    const schema = which === "razorpay" ? razorpayInputSchema : which === "resend" ? resendInputSchema : shiprocketInputSchema;
     const parsed = schema.safeParse(fields);
     if (!parsed.success) {
       const fieldErrors: Record<string, string> = {};
@@ -105,7 +106,7 @@ export async function saveIntegrationAction(
     }
     input = parsed.data;
     const hasNewSecret = Object.entries(input).some(
-      ([k, v]) => v && ["keySecret", "webhookSecret", "password", "webhookToken"].includes(k),
+      ([k, v]) => v && ["keySecret", "webhookSecret", "password", "webhookToken", "apiKey"].includes(k),
     );
     if (hasNewSecret && !canEncryptSecrets()) {
       return {
@@ -140,8 +141,25 @@ export async function testIntegrationAction(which: IntegrationName): Promise<Int
   } catch {
     return { ok: false, error: "Only admins can test integrations." };
   }
-  const { razorpay, shiprocket } = await getIntegrations();
+  const { razorpay, shiprocket, resend } = await getIntegrations();
   try {
+    if (which === "resend") {
+      if (!resend) return { ok: false, error: "Save your Resend API key first." };
+      // A sending-only key can't list domains, so the honest test is a real email to the store's own contact address.
+      const { getSettings } = await import("@/lib/settings");
+      const { fromHeader, getResend } = await import("@/lib/email");
+      const { identity } = await getSettings();
+      if (!identity.contactEmail) return { ok: false, error: "Set a Contact email (Settings > Store & SEO) so the test email has somewhere to go." };
+      const client = await getResend();
+      const { error } = await client!.emails.send({
+        from: fromHeader(identity),
+        to: identity.contactEmail,
+        subject: `Test email from ${identity.storeName}`,
+        text: `This is a test. If you can read it, your order emails are set up and will arrive from ${fromHeader(identity)}.`,
+      });
+      if (error) return { ok: false, error: error.message };
+      return { ok: true };
+    }
     if (which === "razorpay") {
       if (!razorpay) return { ok: false, error: "Save the Key ID and Key secret first." };
       const { getRazorpay } = await import("@/lib/razorpay");
