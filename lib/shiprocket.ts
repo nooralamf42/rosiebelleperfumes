@@ -178,7 +178,7 @@ export async function createShiprocketOrder(
 
   if (!r.ok) {
     // Shiprocket uses this wording when the *pickup* side is incomplete, not only the customer's address.
-    const hint = /add billing\?\/shipping address/i.test(r.raw)
+    const hint = /add billing.{1,3}shipping address/i.test(r.raw)
       ? ` In Shiprocket check Settings > Pickup Addresses: an address named "${payload.pickup_location}" must exist and be verified. Set that exact name in Settings > Integrations > Pickup location.`
       : "";
     throw new Error(`Shiprocket order failed: ${r.status} ${r.raw}${hint}`);
