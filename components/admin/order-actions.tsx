@@ -101,7 +101,8 @@ export function OrderActions({
       }
       router.refresh();
     } else {
-      toast.error(res.error ?? "Failed to fulfill");
+      // Stays on screen until closed so the exact reason can be read.
+      toast.error(res.error ?? "Failed to fulfill", { duration: Infinity, closeButton: true });
     }
   }
 

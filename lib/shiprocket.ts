@@ -67,6 +67,30 @@ export type ShiprocketOrderResult = {
   status?: string;
 };
 
+/**
+ * The pickup address name Shiprocket should use. Shiprocket only accepts the
+ * exact nickname of an address saved in the seller's account (Settings > Pickup
+ * Addresses), and the owner shouldn't have to know that: if the configured name
+ * isn't one of them, the account's own address is used (a verified one first).
+ */
+async function resolvePickupLocation(token: string, configured: string): Promise<string> {
+  try {
+    const res = await fetch(`${BASE}/settings/company/pickup`, { headers: { Authorization: `Bearer ${token}` } });
+    if (!res.ok) return configured;
+    const data = (await res.json()) as {
+      data?: { shipping_address?: { pickup_location?: string; status?: number | string; phone_verified?: number | string }[] };
+    };
+    const list = (data.data?.shipping_address ?? []).filter((a) => a.pickup_location);
+    if (list.length === 0) return configured;
+    const exact = list.find((a) => a.pickup_location!.toLowerCase() === configured.trim().toLowerCase());
+    if (exact) return exact.pickup_location!;
+    const verified = list.find((a) => Number(a.status) === 2 || Number(a.phone_verified) === 1);
+    return (verified ?? list[0]).pickup_location!;
+  } catch {
+    return configured;
+  }
+}
+
 /** Create an order (adhoc) in Shiprocket. */
 export async function createShiprocketOrder(
   input: ShiprocketOrderInput,
@@ -84,7 +108,7 @@ export async function createShiprocketOrder(
   const payload = {
     order_id: String(input.orderNumber),
     order_date: orderDate,
-    pickup_location: (await getCredentials()).pickupLocation,
+    pickup_location: await resolvePickupLocation(token, (await getCredentials()).pickupLocation),
     billing_customer_name: firstName || input.ship.name,
     billing_last_name: lastName,
     billing_address: line1,
@@ -138,11 +162,17 @@ export async function createShiprocketOrder(
     throw new Error(`Shiprocket order failed: ${res.status} ${text}${hint}`);
   }
 
-  const data = (await res.json()) as {
-    order_id?: number;
-    shipment_id?: number;
-    status?: string;
-  };
+  const raw = await res.text();
+  let data: { order_id?: number; shipment_id?: number; status?: string; message?: string };
+  try {
+    data = JSON.parse(raw);
+  } catch {
+    throw new Error(`Shiprocket returned an unreadable reply: ${raw.slice(0, 200)}`);
+  }
+  // Shiprocket can answer 200 with an error message and no order; never treat that as success.
+  if (!data.order_id || !data.shipment_id) {
+    throw new Error(`Shiprocket did not create the order: ${raw.slice(0, 300)}`);
+  }
 
   return {
     shiprocketOrderId: data.order_id ? String(data.order_id) : undefined,
