@@ -3,7 +3,7 @@
 import { useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Check, Copy, Loader2, Plug, Sparkles } from "lucide-react";
+import { Check, Copy, Eye, EyeOff, Loader2, Plug, Sparkles } from "lucide-react";
 import { saveIntegrationAction, testIntegrationAction } from "@/app/admin/settings/actions";
 import type { FieldStatus, IntegrationsStatus } from "@/lib/integrations";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,60 @@ function secretHint(s: FieldStatus) {
 
 function secretPlaceholder(s: FieldStatus) {
   return s.set ? "••••••••••••" : "";
+}
+
+/** Password-style box with a show/hide eye and, optionally, a copy button (for tokens you just generated). */
+function SecretInput({
+  value,
+  onChange,
+  placeholder,
+  copyable = false,
+  className,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  copyable?: boolean;
+  className?: string;
+}) {
+  const [shown, setShown] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const iconBtn = "grid size-8 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground";
+  return (
+    <div className={cn("relative", className)}>
+      <Input
+        type={shown ? "text" : "password"}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        autoComplete="new-password"
+        className={cn("font-mono", copyable ? "pr-20" : "pr-11")}
+      />
+      <div className="absolute inset-y-0 right-1.5 flex items-center gap-0.5">
+        {copyable && value && (
+          <button
+            type="button"
+            aria-label="Copy"
+            className={iconBtn}
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(value);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 1500);
+              } catch {
+                toast.error("Couldn't copy — show it and copy the text.");
+              }
+            }}
+          >
+            {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
+          </button>
+        )}
+        <button type="button" aria-label={shown ? "Hide" : "Show"} aria-pressed={shown} className={iconBtn} onClick={() => setShown((v) => !v)}>
+          {shown ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+        </button>
+      </div>
+    </div>
+  );
 }
 
 function CopyField({ label, value, hint }: { label: string; value: string; hint?: string }) {
@@ -216,13 +270,7 @@ export function IntegrationsForm({
             <Input value={rzKeyId} onChange={(e) => setRzKeyId(e.target.value)} placeholder="rzp_live_…" autoComplete="off" />
           </Field>
           <Field label="Key secret" error={rzErrors.keySecret} hint={secretHint(rz.keySecret)}>
-            <Input
-              type="password"
-              value={rzSecret}
-              onChange={(e) => setRzSecret(e.target.value)}
-              placeholder={secretPlaceholder(rz.keySecret)}
-              autoComplete="new-password"
-            />
+            <SecretInput value={rzSecret} onChange={setRzSecret} placeholder={secretPlaceholder(rz.keySecret)} />
           </Field>
         </div>
         <Field
@@ -230,13 +278,7 @@ export function IntegrationsForm({
           error={rzErrors.webhookSecret}
           hint={secretHint(rz.webhookSecret) ?? "Any secret you invent here; enter the same one in Razorpay's webhook."}
         >
-          <Input
-            type="password"
-            value={rzWebhook}
-            onChange={(e) => setRzWebhook(e.target.value)}
-            placeholder={secretPlaceholder(rz.webhookSecret)}
-            autoComplete="new-password"
-          />
+          <SecretInput value={rzWebhook} onChange={setRzWebhook} placeholder={secretPlaceholder(rz.webhookSecret)} />
         </Field>
         <CopyField
           label="Webhook URL"
@@ -275,13 +317,7 @@ export function IntegrationsForm({
             <Input type="email" value={srEmail} onChange={(e) => setSrEmail(e.target.value)} autoComplete="off" />
           </Field>
           <Field label="Password" error={srErrors.password} hint={secretHint(sr.password)}>
-            <Input
-              type="password"
-              value={srPassword}
-              onChange={(e) => setSrPassword(e.target.value)}
-              placeholder={secretPlaceholder(sr.password)}
-              autoComplete="new-password"
-            />
+            <SecretInput value={srPassword} onChange={setSrPassword} placeholder={secretPlaceholder(sr.password)} />
           </Field>
         </div>
         <Field
@@ -297,13 +333,7 @@ export function IntegrationsForm({
           hint={secretHint(sr.webhookToken) ?? "Optional. Makes order status update the moment a parcel moves."}
         >
           <div className="flex gap-2">
-            <Input
-              type="password"
-              value={srToken}
-              onChange={(e) => setSrToken(e.target.value)}
-              placeholder={secretPlaceholder(sr.webhookToken)}
-              autoComplete="new-password"
-            />
+            <SecretInput value={srToken} onChange={setSrToken} placeholder={secretPlaceholder(sr.webhookToken)} copyable className="min-w-0 flex-1" />
             <Button
               type="button"
               variant="outline"
