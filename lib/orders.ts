@@ -193,7 +193,11 @@ export async function getAllOrders() {
  * a partial failure (e.g. label generation) can be retried without
  * re-creating the Shiprocket order.
  */
-export async function fulfillOrder(orderId: string) {
+export async function fulfillOrder(orderId: string, retried = false): Promise<Awaited<ReturnType<typeof fulfillOrderOnce>>> {
+  return fulfillOrderOnce(orderId, retried);
+}
+
+async function fulfillOrderOnce(orderId: string, retried: boolean) {
   if (!hasDatabase) throw new Error("Database not configured");
 
   let order = await db.order.findUnique({
@@ -261,7 +265,16 @@ export async function fulfillOrder(orderId: string) {
         include: { items: true },
       });
     } catch (err) {
-      warning = err instanceof Error ? err.message : "Courier assignment failed";
+      const message = err instanceof Error ? err.message : "Courier assignment failed";
+      // The Shiprocket order was cancelled on Shiprocket's side (for example in its dashboard): forget it and start again once.
+      if (!retried && /cancelled state|canceled state/i.test(message)) {
+        await db.order.update({
+          where: { id: orderId },
+          data: { shiprocketOrderId: null, shiprocketShipmentId: null, awbCode: null, courierName: null, trackingUrl: null, labelUrl: null },
+        });
+        return fulfillOrder(orderId, true);
+      }
+      warning = message;
     }
   }
 
