@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Check, Copy, Loader2, Plug, Sparkles } from "lucide-react";
@@ -58,6 +58,35 @@ function CopyField({ label, value, hint }: { label: string; value: string; hint?
         </Button>
       </div>
     </Field>
+  );
+}
+
+/** The address this admin page is open on, so webhook URLs always use the real domain. */
+const noopSubscribe = () => () => {};
+function useOrigin(fallback: string) {
+  return useSyncExternalStore(noopSubscribe, () => window.location.origin, () => fallback);
+}
+
+/** Events to tick in a payment or shipping dashboard: required ones, then optional ones. */
+function EventChecklist({ required, optional, note }: { required: string[]; optional?: string[]; note?: string }) {
+  const chip = (e: string, on: boolean) => (
+    <code key={e} className={cn("rounded-md px-2 py-1 text-xs", on ? "bg-emerald-100 text-emerald-900" : "bg-muted text-muted-foreground")}>
+      {on ? "✓ " : ""}
+      {e}
+    </code>
+  );
+  return (
+    <div className="space-y-2 rounded-xl border border-dashed p-3 text-sm">
+      <p className="font-medium">Events to tick</p>
+      <div className="flex flex-wrap items-center gap-1.5">{required.map((e) => chip(e, true))}</div>
+      {optional && optional.length > 0 && (
+        <>
+          <p className="pt-1 text-xs text-muted-foreground">Optional (shows refund results in your orders):</p>
+          <div className="flex flex-wrap items-center gap-1.5">{optional.map((e) => chip(e, false))}</div>
+        </>
+      )}
+      {note && <p className="text-xs text-muted-foreground">{note}</p>}
+    </div>
   );
 }
 
@@ -143,6 +172,7 @@ export function IntegrationsForm({
   canStoreSecrets: boolean;
 }) {
   const router = useRouter();
+  const origin = useOrigin(siteUrl);
   const refresh = () => router.refresh();
 
   const rz = status.razorpay;
@@ -210,8 +240,13 @@ export function IntegrationsForm({
         </Field>
         <CopyField
           label="Webhook URL"
-          value={`${siteUrl}/api/webhooks/razorpay`}
-          hint="Razorpay → Settings → Webhooks → Add. Tick payment.captured, order.paid, payment.failed, refund.processed and refund.failed. It confirms payments even if a customer closes the page early."
+          value={`${origin}/api/webhooks/razorpay`}
+          hint="Razorpay dashboard → Account & Settings → Webhooks → Add new webhook. Paste this URL, and the Webhook secret from above into Razorpay's “Secret” box. This confirms payments even if a customer closes the page early."
+        />
+        <EventChecklist
+          required={["payment.captured", "order.paid", "payment.failed"]}
+          optional={["refund.processed", "refund.failed"]}
+          note="Leave every other event unticked. Test mode and Live mode have separate webhooks: add it in the mode your keys belong to."
         />
         <IntegrationActions
           which="razorpay"
@@ -287,9 +322,14 @@ export function IntegrationsForm({
         )}
         <CopyField
           label="Webhook URL"
-          value={`${siteUrl}/api/webhooks/courier`}
-          hint="Shiprocket → Settings → API → Webhooks. Auth token type: x-api-key. (Shiprocket rejects URLs containing “shiprocket”, which is why this one says “courier”.)"
+          value={`${origin}/api/webhooks/courier`}
+          hint="Shiprocket → Settings → API → Webhooks. Paste this URL and set the token above as the x-api-key. (Shiprocket rejects URLs containing “shiprocket”, which is why this one says “courier”.)"
         />
+        <p className="rounded-xl border border-dashed p-3 text-xs text-muted-foreground">
+          <span className="text-sm font-medium text-foreground">Events:</span> Shiprocket&apos;s webhook page only asks for the URL and token. It sends every
+          shipment status update (picked up, in transit, out for delivery, delivered, RTO) to this one address, so there is nothing to tick. Each update
+          moves your order status and sends the shipped / delivered emails.
+        </p>
         <IntegrationActions
           which="shiprocket"
           busy={busy}
