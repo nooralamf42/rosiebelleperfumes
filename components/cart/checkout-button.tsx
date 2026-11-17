@@ -10,8 +10,10 @@ import type { CartLine } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 /**
- * Goes to /checkout when payments and shipping are both set up; otherwise
- * skips checkout and opens WhatsApp with the cart written out as an order.
+ * Goes to /checkout once online payments (Razorpay) are set up; until then
+ * it skips checkout and opens WhatsApp with the cart written out as an order.
+ * Shiprocket is optional: without it you ship orders yourself and tap
+ * "Mark as shipped" on each one.
  */
 export function CheckoutButton({
   lines,
@@ -27,7 +29,7 @@ export function CheckoutButton({
   const { integrations, identity } = useSiteSettings();
   const classes = cn(buttonVariants({ size: "lg" }), className);
 
-  if (integrations.payments && integrations.shipping) {
+  if (integrations.payments) {
     return (
       <Link href="/checkout" onClick={onNavigate} className={classes}>
         Checkout
