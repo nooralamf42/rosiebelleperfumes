@@ -93,6 +93,11 @@ export async function sendOrderEmail(
     getSettings(),
   ]);
   if (!order) return;
+  // Never tell a customer their cancelled order is confirmed or on its way (a refund notice is fine).
+  if (order.status === "CANCELLED" && kind !== "refunded") {
+    if (opts.manual) throw new Error("This order is cancelled, so that email isn't sent.");
+    return;
+  }
 
   const { identity, theme, commerce } = settings;
   const siteUrl = siteBaseUrl(settings);

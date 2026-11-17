@@ -52,6 +52,8 @@ const EMAIL_LABELS: Record<OrderEmailKind, string> = {
 /** Emails the admin may (re)send for an order in this state. */
 function availableEmails(status: string, refundedAmount: number): OrderEmailKind[] {
   if (status === "PENDING") return [];
+  // A cancelled order never gets confirmation, shipping or delivery emails; only a refund notice if money went back.
+  if (status === "CANCELLED") return refundedAmount > 0 ? ["refunded"] : [];
   const kinds: OrderEmailKind[] = ["confirmed"];
   if (status === "SHIPPED" || status === "DELIVERED") kinds.push("shipped");
   if (status === "DELIVERED") kinds.push("delivered");
