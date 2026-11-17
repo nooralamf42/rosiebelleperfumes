@@ -51,7 +51,7 @@ export function SettingsTabs({
 
       {/* Each form keeps its own unsaved edits while you switch tabs. */}
       <TabsContent value="store" keepMounted className="mt-4">
-        <IdentityForm initial={settings.identity} emailDomain={emailDomain} />
+        <IdentityForm initial={settings.identity} emailDomain={emailDomain} siteAddress={integrations.siteUrl} />
       </TabsContent>
       <TabsContent value="theme" keepMounted className="mt-4">
         <ThemeForm initial={settings.theme} />

@@ -29,14 +29,19 @@ export const getSettings = cache(async (): Promise<SiteSettings> => {
   }
 });
 
-/** Public base URL: the admin-set site address, else the env fallback. No trailing slash. */
+/**
+ * Public base URL of the store, found automatically (nobody has to type it):
+ * 1. NEXT_PUBLIC_APP_URL, if it was set on purpose (placeholders are ignored);
+ * 2. the production domain Vercel exposes to every project (it is the custom
+ *    domain once one is attached, else the *.vercel.app address);
+ * 3. an address saved in Settings by an older version (no longer asked for);
+ * 4. localhost, for local development. No trailing slash.
+ */
 export function siteBaseUrl(settings: SiteSettings): string {
-  // A leftover placeholder like https://www.your-domain.com must not count as an address.
-  const fromEnv = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "");
+  const fromEnv = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/+$/, "");
   const usableEnv = fromEnv && !/your-?domain|example\.(com|org)/i.test(fromEnv) ? fromEnv : "";
-  // Vercel sets this to the project's main production domain (a custom domain once one is attached).
   const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "";
-  return settings.identity.siteUrl || usableEnv || vercel || "http://localhost:3000";
+  return usableEnv || vercel || settings.identity.siteUrl || "http://localhost:3000";
 }
 
 export function toCommerceRules(settings: SiteSettings): CommerceRules {

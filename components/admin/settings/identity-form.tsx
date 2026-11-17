@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { useSectionForm } from "./use-section-form";
 import { Field, ImageField, SaveBar, SettingsCard, TextAreaField, TextField } from "./fields";
 
-export function IdentityForm({ initial, emailDomain }: { initial: IdentitySettings; emailDomain: SendingDomain }) {
+export function IdentityForm({ initial, emailDomain, siteAddress }: { initial: IdentitySettings; emailDomain: SendingDomain; siteAddress: string }) {
   const { value: v, patch, errors, saving, dirty, save, reset } = useSectionForm("identity", initial);
 
   return (
@@ -125,7 +125,7 @@ export function IdentityForm({ initial, emailDomain }: { initial: IdentitySettin
           <p className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
             Your store is on {emailDomain.host ? <strong>{emailDomain.host}</strong> : "a temporary address"}. Email services only send from a domain you own and have
             verified, and a free address like this can never be verified. Until you connect your own domain (for example in Vercel → Settings → Domains) and
-            enter it as the Site address above, order emails use Resend&apos;s test sender, which only delivers to your own Resend account email.
+            redeploy, order emails use Resend&apos;s test sender, which only delivers to your own Resend account email.
           </p>
         )}
       </SettingsCard>
@@ -156,14 +156,9 @@ export function IdentityForm({ initial, emailDomain }: { initial: IdentitySettin
         title="Search & sharing"
         description="How your store appears on Google and when links are shared on WhatsApp, Instagram, etc."
       >
-        <TextField
-          label="Website address"
-          hint="Your live domain, e.g. https://mystore.com. Used for share links and the sitemap."
-          placeholder="https://"
-          value={v.siteUrl}
-          onChange={(siteUrl) => patch({ siteUrl })}
-          error={errors.siteUrl}
-        />
+        <Field label="Website address" hint="Found automatically from where your store is hosted, so there is nothing to enter. Used for share links, the sitemap and emails.">
+          <Input readOnly value={siteAddress} className="bg-muted/40 text-muted-foreground" onFocus={(e) => e.currentTarget.select()} />
+        </Field>
         <TextField
           label="Homepage title"
           hint={`Up to 70 characters. Leave empty to use "${v.storeName}${v.tagline ? ` — ${v.tagline}` : ""}".`}
