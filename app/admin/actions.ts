@@ -5,7 +5,7 @@ import { db, hasDatabase } from "@/lib/db";
 import { CACHE_TAGS } from "@/lib/cache-tags";
 import { assertAdmin } from "@/lib/admin-guard";
 import { productSchema, type ProductInput } from "@/lib/validators";
-import { fulfillOrder, markOrderDelivered, markOrderShipped, type ManualShipInput } from "@/lib/orders";
+import { cancelShipping, fulfillOrder, markOrderDelivered, markOrderShipped, type ManualShipInput } from "@/lib/orders";
 import { refundOrder, RefundError } from "@/lib/refunds";
 import { isEmailEnabled, sendOrderEmail, type OrderEmailKind } from "@/lib/email";
 import { ORDER_EMAIL_KINDS } from "@/lib/email/order-email";
@@ -130,6 +130,18 @@ export async function fulfillOrderAction(
     };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Failed to fulfill" };
+  }
+}
+
+/** Cancel a booked (not yet picked up) Shiprocket shipment; the order returns to "confirmed". */
+export async function cancelShippingAction(orderId: string): Promise<ActionResult & { warning?: string }> {
+  try {
+    await assertAdmin();
+    const { warning } = await cancelShipping(orderId);
+    revalidatePath("/admin/orders");
+    return { ok: true, warning };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Couldn't cancel the shipping" };
   }
 }
 

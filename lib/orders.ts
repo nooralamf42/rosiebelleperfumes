@@ -1,8 +1,12 @@
 import { db, hasDatabase } from "./db";
 import { getDbUser, isAdmin } from "./current-user";
 import { getGuestOrderNumbers, getVerifiedEmails } from "./order-access";
+import { getSettings } from "./settings";
+import { computeParcel } from "./shipping-package";
 import {
   assignAwb,
+  cancelShiprocketAwb,
+  cancelShiprocketOrder,
   createShiprocketOrder,
   generateLabel,
   isShiprocketEnabled,
@@ -207,7 +211,10 @@ export async function fulfillOrder(orderId: string) {
 
   // Step 1 — create the Shiprocket order/shipment (skip if already done).
   if (!order.shiprocketShipmentId) {
+    const { commerce } = await getSettings();
+    const parcel = computeParcel(order.items, commerce.packaging);
     const result = await createShiprocketOrder({
+      parcel,
       orderNumber: order.number,
       createdAt: order.createdAt,
       ship: {
@@ -280,6 +287,47 @@ export async function fulfillOrder(orderId: string) {
     labelUrl: order.labelUrl,
     warning,
   };
+}
+
+/**
+ * Cancel the shipping of an order that has been booked with Shiprocket but not
+ * picked up yet: the courier booking and the Shiprocket order are cancelled and
+ * the order goes back to "confirmed", ready to Fulfill again (for example with
+ * a different box). The customer's payment and order are untouched.
+ */
+export async function cancelShipping(orderId: string): Promise<{ warning?: string }> {
+  if (!hasDatabase) throw new Error("Database not configured");
+  if (!(await isShiprocketEnabled())) throw new Error("Shiprocket isn't set up.");
+  const order = await db.order.findUnique({ where: { id: orderId } });
+  if (!order) throw new Error("Order not found");
+  if (order.status !== "FULFILLED") {
+    throw new Error("Shipping can only be cancelled before pickup, while the order is “Preparing to ship”.");
+  }
+
+  let warning: string | undefined;
+  if (order.awbCode) await cancelShiprocketAwb(order.awbCode); // stops here with Shiprocket's reason if it can't be cancelled
+  if (order.shiprocketOrderId) {
+    try {
+      await cancelShiprocketOrder(order.shiprocketOrderId);
+    } catch (err) {
+      console.error(`Order #${order.number}: Shiprocket order cancel failed`, err);
+      warning = "The courier booking was cancelled, but the Shiprocket order itself couldn't be: cancel it in Shiprocket if it is still listed.";
+    }
+  }
+
+  await db.order.update({
+    where: { id: orderId },
+    data: {
+      status: "PAID",
+      shiprocketOrderId: null,
+      shiprocketShipmentId: null,
+      awbCode: null,
+      courierName: null,
+      trackingUrl: null,
+      labelUrl: null,
+    },
+  });
+  return { warning };
 }
 
 /* ---- Shipping without Shiprocket: the admin ships orders by hand ---- */

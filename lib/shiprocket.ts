@@ -59,6 +59,8 @@ export type ShiprocketOrderInput = {
   };
   items: { name: string; sku: string; quantity: number; price: number }[]; // price in paise
   subtotalPaise: number;
+  /** Box size (cm) and weight (kg) from the seller's packaging settings. */
+  parcel: { length: number; breadth: number; height: number; weightKg: number };
 };
 
 export type ShiprocketOrderResult = {
@@ -138,20 +140,30 @@ export async function createShiprocketOrder(
     })),
     payment_method: "Prepaid",
     sub_total: Math.round(input.subtotalPaise / 100),
-    length: 15,
-    breadth: 15,
-    height: 15,
-    weight: 0.5,
+    length: input.parcel.length,
+    breadth: input.parcel.breadth,
+    height: input.parcel.height,
+    weight: input.parcel.weightKg,
   };
 
-  const res = await fetch(`${BASE}/orders/create/adhoc`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(payload),
-  });
+  const send = (body: typeof payload) =>
+    fetch(`${BASE}/orders/create/adhoc`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(body),
+    });
+
+  let res = await send(payload);
+  if (!res.ok) {
+    // After "Cancel shipping" the old Shiprocket order may still hold this order number: try again under a new reference.
+    const first = await res.clone().text();
+    if (/already|exist|duplicate/i.test(first)) {
+      res = await send({ ...payload, order_id: `${payload.order_id}-${Date.now().toString(36).slice(-4)}` });
+    }
+  }
 
   if (!res.ok) {
     const text = await res.text();
@@ -335,5 +347,22 @@ export async function cancelShiprocketOrder(shiprocketOrderId: string): Promise<
   if (!res.ok) {
     const text = await res.text().catch(() => "");
     throw new Error(`Shiprocket cancel failed: ${res.status} ${text.slice(0, 200)}`);
+  }
+}
+
+/**
+ * Cancel a booked courier (AWB) in Shiprocket. Freight is returned to the
+ * wallet by Shiprocket. Fails if the parcel was already picked up.
+ */
+export async function cancelShiprocketAwb(awbCode: string): Promise<void> {
+  const token = await getToken();
+  const res = await fetch(`${BASE}/orders/cancel/shipment/awbs`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ awbs: [awbCode] }),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Shiprocket couldn't cancel the courier booking: ${res.status} ${text.slice(0, 200)}`);
   }
 }

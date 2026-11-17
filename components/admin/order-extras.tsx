@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Check, ChevronDown, Loader2, Mail, RotateCcw } from "lucide-react";
-import { refundOrderAction, sendOrderEmailAction } from "@/app/admin/actions";
+import { Check, ChevronDown, Loader2, Mail, RotateCcw, Ban } from "lucide-react";
+import { cancelShippingAction, refundOrderAction, sendOrderEmailAction } from "@/app/admin/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,6 +37,8 @@ type Props = {
   hasPayment: boolean;
   emailsSent: string[];
   emailError: string | null;
+  /** Booked with Shiprocket but not picked up yet. */
+  canCancelShipping?: boolean;
   align?: "start" | "end";
 };
 
@@ -68,11 +70,13 @@ export function OrderExtras({
   hasPayment,
   emailsSent,
   emailError,
+  canCancelShipping = false,
   align = "end",
 }: Props) {
   const router = useRouter();
   const [sending, setSending] = useState<OrderEmailKind | null>(null);
   const [refundOpen, setRefundOpen] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   const emails = availableEmails(status, refundedAmount);
   const refundable = Math.max(0, total - refundedAmount);
@@ -87,7 +91,21 @@ export function OrderExtras({
     router.refresh();
   }
 
-  if (emails.length === 0 && !canRefund && refundedAmount === 0 && !emailError) return null;
+  async function cancelShip() {
+    if (!confirm("Cancel the shipping for this order? The courier booking is cancelled in Shiprocket and the order goes back to “Order confirmed” so you can Fulfill it again.")) return;
+    setCancelling(true);
+    const res = await cancelShippingAction(orderId);
+    setCancelling(false);
+    if (res.ok) {
+      toast.success("Shipping cancelled — the order is ready to fulfill again");
+      if (res.warning) toast.warning(res.warning, { duration: Infinity, closeButton: true });
+      router.refresh();
+    } else {
+      toast.error(res.error ?? "Couldn't cancel the shipping", { duration: Infinity, closeButton: true });
+    }
+  }
+
+  if (emails.length === 0 && !canRefund && !canCancelShipping && refundedAmount === 0 && !emailError) return null;
 
   return (
     <div className={cn("mt-2 flex flex-col gap-1.5", align === "start" ? "items-start" : "items-end")}>
@@ -104,12 +122,13 @@ export function OrderExtras({
         </span>
       )}
 
-      <div className="flex flex-wrap gap-1.5">
+      {/* one tidy group: every button the same height, thin dividers between them */}
+      <div className="inline-flex max-w-full flex-wrap divide-x overflow-hidden rounded-lg border bg-background">
         {emails.length > 0 && (
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger
               render={
-                <Button size="sm" variant="outline" className="rounded-full" disabled={sending !== null}>
+                <Button size="sm" variant="ghost" className="h-8 rounded-none px-3 text-xs" disabled={sending !== null}>
                   {sending ? <Loader2 className="animate-spin" /> : <Mail />}
                   Email <ChevronDown className="size-3.5 opacity-60" />
                 </Button>
@@ -128,8 +147,15 @@ export function OrderExtras({
           </DropdownMenu>
         )}
 
+        {canCancelShipping && (
+          <Button size="sm" variant="ghost" className="h-8 rounded-none px-3 text-xs" onClick={cancelShip} disabled={cancelling}>
+            {cancelling ? <Loader2 className="animate-spin" /> : <Ban />}
+            Cancel shipping
+          </Button>
+        )}
+
         {canRefund && (
-          <Button size="sm" variant="outline" className="rounded-full" onClick={() => setRefundOpen(true)}>
+          <Button size="sm" variant="ghost" className="h-8 rounded-none px-3 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={() => setRefundOpen(true)}>
             <RotateCcw /> Refund
           </Button>
         )}

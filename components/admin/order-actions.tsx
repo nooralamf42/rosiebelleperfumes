@@ -116,7 +116,7 @@ export function OrderActions({
           variant="ghost"
           onClick={onCancel}
           disabled={cancelling}
-          className="rounded-full"
+          className="h-8 rounded-lg px-3 text-xs"
         >
           {cancelling ? (
             <Loader2 className="size-3.5 animate-spin" />
@@ -128,7 +128,7 @@ export function OrderActions({
       )}
 
       {needsWork && (
-        <Button size="sm" onClick={onClick} disabled={loading} className="rounded-full">
+        <Button size="sm" onClick={onClick} disabled={loading} className="h-8 rounded-lg px-4 text-xs">
           {loading ? (
             <Loader2 className="size-3.5 animate-spin" />
           ) : isRetry ? (
@@ -146,13 +146,13 @@ export function OrderActions({
       )}
 
       {canMarkShipped && (
-        <Button size="sm" onClick={() => setShipOpen(true)} className="rounded-full">
+        <Button size="sm" onClick={() => setShipOpen(true)} className="h-8 rounded-lg px-4 text-xs">
           <Truck className="size-3.5" /> Mark as shipped
         </Button>
       )}
 
       {canMarkDelivered && (
-        <Button size="sm" onClick={onDelivered} disabled={loading} className="rounded-full">
+        <Button size="sm" onClick={onDelivered} disabled={loading} className="h-8 rounded-lg px-4 text-xs">
           {loading ? <Loader2 className="size-3.5 animate-spin" /> : <PackageCheck className="size-3.5" />}
           Mark as delivered
         </Button>

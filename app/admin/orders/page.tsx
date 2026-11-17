@@ -62,6 +62,7 @@ export default async function AdminOrdersPage() {
                     hasPayment={Boolean(o.razorpayPaymentId)}
                     emailsSent={o.emailsSent}
                     emailError={o.emailError}
+                    canCancelShipping={flags.shipping && o.status === "FULFILLED"}
                   />
                 </div>
               </li>
@@ -116,6 +117,7 @@ export default async function AdminOrdersPage() {
                         hasPayment={Boolean(o.razorpayPaymentId)}
                         emailsSent={o.emailsSent}
                         emailError={o.emailError}
+                        canCancelShipping={flags.shipping && o.status === "FULFILLED"}
                       />
                     </td>
                   </tr>

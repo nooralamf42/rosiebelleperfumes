@@ -175,7 +175,63 @@ export const discountTierSchema = z.object({
   freeShipping: z.boolean().default(false),
 });
 
+/*
+ * Parcel size and weight sent to the courier. The owner sets what each bottle
+ * size weighs and how much room it takes ("slots"), plus a list of boxes: the
+ * first box that has room for the order's slots is used. Weight is the bottles
+ * plus the box's own packing weight.
+ */
+const sizeSpec = (weightG: number, slots: number) =>
+  z
+    .object({
+      weightG: z.number().int().min(1).max(10000).default(weightG),
+      slots: z.number().int().min(1).max(50).default(slots),
+    })
+    .prefault({});
+
+export const boxSchema = z.object({
+  upToSlots: z.number().int().min(1).max(500),
+  length: z.number().min(1).max(200),
+  breadth: z.number().min(1).max(200),
+  height: z.number().min(1).max(200),
+  packWeightG: z.number().int().min(0).max(10000),
+});
+
+export const packagingSchema = z.object({
+  sizes: z
+    .object({
+      s3: sizeSpec(40, 1),
+      s6: sizeSpec(60, 1),
+      s12: sizeSpec(100, 2),
+      other: sizeSpec(150, 2),
+    })
+    .prefault({}),
+  boxes: z
+    .array(boxSchema)
+    .min(1, "Add at least one box")
+    .max(8, "Up to 8 boxes")
+    .default([
+      { upToSlots: 2, length: 10, breadth: 10, height: 6, packWeightG: 60 },
+      { upToSlots: 4, length: 15, breadth: 12, height: 8, packWeightG: 100 },
+      { upToSlots: 8, length: 20, breadth: 15, height: 10, packWeightG: 150 },
+      { upToSlots: 20, length: 30, breadth: 20, height: 15, packWeightG: 250 },
+    ])
+    .superRefine((boxes, ctx) => {
+      boxes.forEach((b, i) => {
+        if (i > 0 && b.upToSlots <= boxes[i - 1].upToSlots) {
+          ctx.addIssue({
+            code: "custom",
+            path: [i, "upToSlots"],
+            message: "Each box must hold more than the one before it",
+          });
+        }
+      });
+    }),
+});
+export type PackagingSettings = z.infer<typeof packagingSchema>;
+
 export const commerceSchema = z.object({
+  packaging: packagingSchema.prefault({}),
   shippingFee: paise(1_000_000, 4900),
   freeShippingEnabled: z.boolean().default(true),
   freeShippingThreshold: paise(100_000_000, 99900),
