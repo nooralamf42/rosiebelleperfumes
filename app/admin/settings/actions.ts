@@ -146,16 +146,18 @@ export async function testIntegrationAction(which: IntegrationName): Promise<Int
     if (which === "resend") {
       if (!resend) return { ok: false, error: "Save your Resend API key first." };
       // A sending-only key can't list domains, so the honest test is a real email to the store's own contact address.
-      const { getSettings } = await import("@/lib/settings");
+      const { getSettings, siteBaseUrl } = await import("@/lib/settings");
       const { fromHeader, getResend } = await import("@/lib/email");
-      const { identity } = await getSettings();
+      const settings = await getSettings();
+      const { identity } = settings;
+      const from = fromHeader(identity, siteBaseUrl(settings));
       if (!identity.contactEmail) return { ok: false, error: "Set a Contact email (Settings > Store & SEO) so the test email has somewhere to go." };
       const client = await getResend();
       const { error } = await client!.emails.send({
-        from: fromHeader(identity),
+        from,
         to: identity.contactEmail,
         subject: `Test email from ${identity.storeName}`,
-        text: `This is a test. If you can read it, your order emails are set up and will arrive from ${fromHeader(identity)}.`,
+        text: `This is a test. If you can read it, your order emails are set up and will arrive from ${from}.`,
       });
       if (error) return { ok: false, error: error.message };
       return { ok: true };

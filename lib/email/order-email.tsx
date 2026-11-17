@@ -16,6 +16,7 @@ import {
 } from "@react-email/components";
 import { formatPrice } from "@/lib/format";
 import { textOn } from "@/lib/settings/color";
+import { splitBrand } from "@/components/layout/brand-logo";
 import type { IdentitySettings, ThemeSettings } from "@/lib/settings/schema";
 
 export const ORDER_EMAIL_KINDS = ["confirmed", "shipped", "delivered", "refunded"] as const;
@@ -109,6 +110,17 @@ function copyFor(p: OrderEmailProps, firstName: string) {
  * Styles are inline (email clients ignore stylesheets) and colors come from
  * the store theme. Gmail and Outlook don't show SVG logos — use PNG/JPG.
  */
+/*
+ * Same type as the website: Fraunces for the brand and headings, Inter for text.
+ * Apple Mail, iOS Mail and most phone mail apps load them from Google Fonts;
+ * Gmail and desktop Outlook ignore web fonts, so they show Georgia (a serif of
+ * similar weight) and Helvetica/Arial instead.
+ */
+const DISPLAY = "Fraunces, Georgia, 'Times New Roman', serif";
+const BODY = "Inter, Helvetica, Arial, sans-serif";
+const FONTS_URL =
+  "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;600;700&display=swap";
+
 export function OrderEmail(props: OrderEmailProps) {
   const { kind, order, identity, theme, orderUrl, siteUrl } = props;
   const firstName = order.shipName.trim().split(/\s+/)[0] || "there";
@@ -131,9 +143,11 @@ export function OrderEmail(props: OrderEmailProps) {
 
   return (
     <Html lang="en">
-      <Head />
+      <Head>
+        <link href={FONTS_URL} rel="stylesheet" />
+      </Head>
       <Preview>{`${copy.preview} · ${identity.storeName}`}</Preview>
-      <Body style={{ margin: 0, backgroundColor: theme.background, fontFamily: "Helvetica, Arial, sans-serif", color: theme.foreground }}>
+      <Body style={{ margin: 0, backgroundColor: theme.background, fontFamily: BODY, color: theme.foreground }}>
         <Container style={{ maxWidth: 560, margin: "0 auto", padding: "32px 16px" }}>
           {/* Brand */}
           <Section style={{ textAlign: "center", paddingBottom: 24 }}>
@@ -141,7 +155,17 @@ export function OrderEmail(props: OrderEmailProps) {
               {identity.logoUrl ? (
                 <Img src={identity.logoUrl} alt={identity.storeName} height={40} style={{ margin: "0 auto", maxWidth: 180 }} />
               ) : (
-                <Text style={{ margin: 0, fontSize: 24, fontWeight: 700, color: theme.primary }}>{identity.storeName}</Text>
+                <>
+                  {/* the website's stacked wordmark: first word large, the rest spaced out beneath */}
+                  <Text style={{ margin: 0, fontFamily: DISPLAY, fontSize: 38, lineHeight: "40px", fontWeight: 400, letterSpacing: "-0.01em", color: theme.foreground }}>
+                    {splitBrand(identity.storeName).main}
+                  </Text>
+                  {splitBrand(identity.storeName).sub && (
+                    <Text style={{ margin: "6px 0 0", fontFamily: BODY, fontSize: 11, lineHeight: "14px", fontWeight: 500, letterSpacing: "0.55em", textTransform: "uppercase", color: theme.foreground }}>
+                      {splitBrand(identity.storeName).sub}
+                    </Text>
+                  )}
+                </>
               )}
             </Link>
           </Section>
@@ -150,7 +174,7 @@ export function OrderEmail(props: OrderEmailProps) {
             <Text style={{ margin: 0, fontSize: 13, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", color: theme.primary }}>
               {copy.eyebrow}
             </Text>
-            <Heading as="h1" style={{ margin: "8px 0 0", fontSize: 26, lineHeight: "32px", color: theme.foreground }}>
+            <Heading as="h1" style={{ margin: "8px 0 0", fontFamily: DISPLAY, fontSize: 28, lineHeight: "34px", fontWeight: 400, color: theme.foreground }}>
               {copy.heading}
             </Heading>
             <Text style={{ margin: "12px 0 0", fontSize: 15, lineHeight: "24px", color: muted }}>{copy.intro}</Text>
@@ -204,12 +228,18 @@ export function OrderEmail(props: OrderEmailProps) {
             <Hr style={{ borderColor: border, margin: "28px 0 20px" }} />
 
             {/* Items */}
-            <Text style={{ margin: "0 0 12px", fontSize: 16, fontWeight: 700 }}>Items</Text>
+            <Text style={{ margin: "0 0 12px", fontFamily: DISPLAY, fontSize: 18, fontWeight: 400 }}>Items</Text>
             {order.items.map((item, i) => (
               <Row key={i} style={{ marginBottom: 12 }}>
-                <Column style={{ width: 64, verticalAlign: "top" }}>
-                  {item.image?.startsWith("https://") ? (
-                    <Img src={item.image} alt="" width={56} height={56} style={{ borderRadius: 10, objectFit: "cover", border: `1px solid ${border}` }} />
+                <Column style={{ width: 68, verticalAlign: "top" }}>
+                  {item.image?.startsWith("http") ? (
+                    <Img
+                      src={item.image}
+                      alt={item.name}
+                      width={56}
+                      height={56}
+                      style={{ display: "block", borderRadius: 10, backgroundColor: theme.background, border: `1px solid ${border}` }}
+                    />
                   ) : (
                     <div style={{ width: 56, height: 56, borderRadius: 10, backgroundColor: theme.background }} />
                   )}

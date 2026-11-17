@@ -31,11 +31,12 @@ export const getSettings = cache(async (): Promise<SiteSettings> => {
 
 /** Public base URL: the admin-set site address, else the env fallback. No trailing slash. */
 export function siteBaseUrl(settings: SiteSettings): string {
-  return (
-    settings.identity.siteUrl ||
-    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "") ||
-    "http://localhost:3000"
-  );
+  // A leftover placeholder like https://www.your-domain.com must not count as an address.
+  const fromEnv = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "");
+  const usableEnv = fromEnv && !/your-?domain|example\.(com|org)/i.test(fromEnv) ? fromEnv : "";
+  // Vercel sets this to the project's main production domain (a custom domain once one is attached).
+  const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "";
+  return settings.identity.siteUrl || usableEnv || vercel || "http://localhost:3000";
 }
 
 export function toCommerceRules(settings: SiteSettings): CommerceRules {

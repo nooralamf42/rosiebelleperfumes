@@ -14,16 +14,19 @@ import { HomepageForm } from "./homepage-form";
 import { CommerceForm } from "./commerce-form";
 import { IntegrationsForm } from "./integrations-form";
 import type { IntegrationsStatus } from "@/lib/integrations";
+import type { SendingDomain } from "@/lib/email/sender";
 import { SETTINGS_TABS, type SettingsTab } from "./tabs";
 
 export function SettingsTabs({
   settings,
   initialTab,
   integrations,
+  emailDomain,
 }: {
   settings: SiteSettings;
   initialTab: SettingsTab;
   integrations: { status: IntegrationsStatus; siteUrl: string; canStoreSecrets: boolean };
+  emailDomain: SendingDomain;
 }) {
   return (
     <Tabs
@@ -48,7 +51,7 @@ export function SettingsTabs({
 
       {/* Each form keeps its own unsaved edits while you switch tabs. */}
       <TabsContent value="store" keepMounted className="mt-4">
-        <IdentityForm initial={settings.identity} />
+        <IdentityForm initial={settings.identity} emailDomain={emailDomain} />
       </TabsContent>
       <TabsContent value="theme" keepMounted className="mt-4">
         <ThemeForm initial={settings.theme} />

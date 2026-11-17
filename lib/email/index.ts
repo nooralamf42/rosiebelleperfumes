@@ -4,6 +4,9 @@ import { render } from "@react-email/components";
 import { db, hasDatabase } from "@/lib/db";
 import { getSettings, siteBaseUrl } from "@/lib/settings";
 import { orderLinkToken } from "@/lib/order-access";
+import { bottleAccent } from "@/lib/perfume-colors";
+import { bottleSizeOf } from "@/lib/sizes";
+import { sendingDomain, senderLocalPart } from "./sender";
 import { getIntegrations } from "@/lib/integrations";
 import { OrderEmail, type OrderEmailKind } from "./order-email";
 import type { IdentitySettings } from "@/lib/settings/schema";
@@ -29,14 +32,18 @@ export async function isEmailEnabled(): Promise<boolean> {
 }
 
 /**
- * "Store Name <address>". The name is always the store name from Settings;
- * the address comes from Settings → Store & SEO → Order emails, then the
+ * "Store Name <address>". The name is always the store name from Settings. The
+ * part before the @ is what the owner typed (Settings > Store & SEO > Order
+ * emails); the domain is always the store's own address. On a free address
+ * (such as *.vercel.app) email can't be verified, so it falls back to the
  * EMAIL_FROM env var, then Resend's test sender (which only delivers to the
  * Resend account owner's own email).
  */
-export function fromHeader(identity: IdentitySettings): string {
+export function fromHeader(identity: IdentitySettings, siteUrl: string): string {
+  const { domain } = sendingDomain(siteUrl);
+  const user = senderLocalPart(identity.emailFromAddress);
   const envAddress = process.env.EMAIL_FROM?.match(/<([^>]+)>/)?.[1] ?? process.env.EMAIL_FROM;
-  const address = identity.emailFromAddress || envAddress?.trim() || "onboarding@resend.dev";
+  const address = domain && user ? `${user}@${domain}` : envAddress?.trim() || "onboarding@resend.dev";
   const name = identity.storeName.replace(/["<>\r\n]/g, "").trim() || "Store";
   return `"${name}" <${address}>`;
 }
@@ -79,16 +86,29 @@ export async function sendOrderEmail(
   if (!hasDatabase) return;
 
   const [order, settings] = await Promise.all([
-    db.order.findUnique({ where: { id: orderId }, include: { items: true } }),
+    db.order.findUnique({
+      where: { id: orderId },
+      include: { items: { include: { product: { select: { accentColor: true } } } } },
+    }),
     getSettings(),
   ]);
   if (!order) return;
 
   const { identity, theme, commerce } = settings;
   const siteUrl = siteBaseUrl(settings);
+  // Product photos for the email: an uploaded picture, else the bottle in the perfume's colour.
+  const items = order.items.map((i) => {
+    const size = bottleSizeOf(i.size);
+    const image = i.image?.startsWith("https://")
+      ? i.image
+      : size && i.product
+        ? `${siteUrl}/email-bottles/${bottleAccent(i.product.accentColor)}/${size}.png`
+        : null;
+    return { ...i, image };
+  });
   const element = OrderEmail({
     kind,
-    order,
+    order: { ...order, items },
     identity,
     theme,
     orderUrl: orderLink(siteUrl, order.number),
@@ -105,7 +125,7 @@ export async function sendOrderEmail(
     const [html, text] = await Promise.all([render(element), render(element, { plainText: true })]);
     const { error } = await resend.emails.send(
       {
-        from: fromHeader(identity),
+        from: fromHeader(identity, siteUrl),
         to: order.email,
         ...(identity.contactEmail ? { replyTo: identity.contactEmail } : {}),
         subject: SUBJECTS[kind](order.number, identity.storeName),

@@ -1,10 +1,13 @@
 "use client";
 
 import type { IdentitySettings } from "@/lib/settings/schema";
+import type { SendingDomain } from "@/lib/email/sender";
+import { senderLocalPart } from "@/lib/email/sender";
+import { Input } from "@/components/ui/input";
 import { useSectionForm } from "./use-section-form";
-import { ImageField, SaveBar, SettingsCard, TextAreaField, TextField } from "./fields";
+import { Field, ImageField, SaveBar, SettingsCard, TextAreaField, TextField } from "./fields";
 
-export function IdentityForm({ initial }: { initial: IdentitySettings }) {
+export function IdentityForm({ initial, emailDomain }: { initial: IdentitySettings; emailDomain: SendingDomain }) {
   const { value: v, patch, errors, saving, dirty, save, reset } = useSectionForm("identity", initial);
 
   return (
@@ -95,15 +98,36 @@ export function IdentityForm({ initial }: { initial: IdentitySettings }) {
         title="Order emails"
         description="Customers get an order confirmation email from your store when they pay."
       >
-        <TextField
+        <Field
           label="Send emails from"
-          type="email"
-          placeholder="orders@yourstore.com"
-          hint={`Emails arrive from "${v.storeName || "your store"}" <this address>. The domain must be verified in your Resend account. Customer replies go to your contact email above.`}
-          value={v.emailFromAddress}
-          onChange={(emailFromAddress) => patch({ emailFromAddress })}
           error={errors.emailFromAddress}
-        />
+          hint={
+            emailDomain.domain
+              ? `Only the part before the @ is yours to choose. The domain is your store's address, ${emailDomain.domain}, and it must be verified in your Resend account (resend.com → Domains). Emails arrive from "${v.storeName || "your store"}". Customer replies go to your Contact email above.`
+              : undefined
+          }
+        >
+          <div className="flex items-center gap-2">
+            <Input
+              value={senderLocalPart(v.emailFromAddress)}
+              onChange={(e) => patch({ emailFromAddress: senderLocalPart(e.target.value) })}
+              placeholder="orders"
+              maxLength={60}
+              autoComplete="off"
+              disabled={!emailDomain.domain}
+              aria-label="Sender name before the @"
+              className="max-w-[14rem]"
+            />
+            <span className="whitespace-nowrap text-sm text-muted-foreground">@{emailDomain.domain ?? (emailDomain.host || "your-domain")}</span>
+          </div>
+        </Field>
+        {!emailDomain.domain && (
+          <p className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            Your store is on {emailDomain.host ? <strong>{emailDomain.host}</strong> : "a temporary address"}. Email services only send from a domain you own and have
+            verified, and a free address like this can never be verified. Until you connect your own domain (for example in Vercel → Settings → Domains) and
+            enter it as the Site address above, order emails use Resend&apos;s test sender, which only delivers to your own Resend account email.
+          </p>
+        )}
       </SettingsCard>
 
       <SettingsCard title="Social links" description="Full profile links. Empty ones are hidden.">

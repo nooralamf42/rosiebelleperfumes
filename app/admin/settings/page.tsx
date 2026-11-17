@@ -1,6 +1,7 @@
 import { db, hasDatabase } from "@/lib/db";
 import { defaultSettings, settingsFromRows } from "@/lib/settings/parse";
 import { siteBaseUrl } from "@/lib/settings";
+import { sendingDomain } from "@/lib/email/sender";
 import { canEncryptSecrets, getIntegrationsStatus } from "@/lib/integrations";
 import { SettingsTabs } from "@/components/admin/settings/settings-tabs";
 import { SETTINGS_TABS, type SettingsTab } from "@/components/admin/settings/tabs";
@@ -38,6 +39,7 @@ export default async function AdminSettingsPage({
         <SettingsTabs
           settings={settings}
           initialTab={initialTab}
+          emailDomain={sendingDomain(siteBaseUrl(settings))}
           integrations={{
             status: await getIntegrationsStatus(),
             siteUrl: siteBaseUrl(settings),

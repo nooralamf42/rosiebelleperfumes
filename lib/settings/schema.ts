@@ -63,8 +63,13 @@ export const identitySchema = z.object({
   logoUrl: imageUrl,
   faviconUrl: imageUrl,
   contactEmail: optionalEmail,
-  /** Sender address for order emails; must be on a domain verified in Resend. Sender name = store name. */
-  emailFromAddress: optionalEmail,
+  /** The part before the @ of the order-email sender (e.g. "orders"). The domain is always the store's own. Old full addresses still work. */
+  emailFromAddress: z
+    .string()
+    .trim()
+    .max(120)
+    .refine((v) => v === "" || /^[A-Za-z0-9._+-]+(@[^\s@]+)?$/.test(v), "Use letters, numbers, dots or dashes, like: orders")
+    .default(""),
   contactPhone: text(30),
   whatsapp: text(30),
   address: text(300),
