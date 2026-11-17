@@ -73,21 +73,39 @@ export async function createShiprocketOrder(
 ): Promise<ShiprocketOrderResult> {
   const token = await getToken();
 
+  // Shiprocket wants "YYYY-MM-DD HH:mm" (India time), a first and a last name,
+  // and the delivery address spelled out even when it is the billing address.
+  const orderDate = new Date(input.createdAt.getTime() + 5.5 * 3600 * 1000).toISOString().slice(0, 16).replace("T", " ");
+  const [firstName, ...rest] = input.ship.name.trim().split(/\s+/);
+  const lastName = rest.join(" ");
+  const line1 = input.ship.line1.trim();
+  const line2 = (input.ship.line2 ?? "").trim();
+
   const payload = {
     order_id: String(input.orderNumber),
-    order_date: input.createdAt.toISOString().slice(0, 10),
+    order_date: orderDate,
     pickup_location: (await getCredentials()).pickupLocation,
-    billing_customer_name: input.ship.name,
-    billing_last_name: "",
-    billing_address: input.ship.line1,
-    billing_address_2: input.ship.line2 || "",
-    billing_city: input.ship.city,
-    billing_pincode: input.ship.pincode,
-    billing_state: input.ship.state,
+    billing_customer_name: firstName || input.ship.name,
+    billing_last_name: lastName,
+    billing_address: line1,
+    billing_address_2: line2,
+    billing_city: input.ship.city.trim(),
+    billing_pincode: input.ship.pincode.trim(),
+    billing_state: input.ship.state.trim(),
     billing_country: "India",
     billing_email: input.ship.email,
-    billing_phone: input.ship.phone,
+    billing_phone: input.ship.phone.replace(/\D/g, "").slice(-10),
     shipping_is_billing: true,
+    shipping_customer_name: firstName || input.ship.name,
+    shipping_last_name: lastName,
+    shipping_address: line1,
+    shipping_address_2: line2,
+    shipping_city: input.ship.city.trim(),
+    shipping_pincode: input.ship.pincode.trim(),
+    shipping_state: input.ship.state.trim(),
+    shipping_country: "India",
+    shipping_email: input.ship.email,
+    shipping_phone: input.ship.phone.replace(/\D/g, "").slice(-10),
     order_items: input.items.map((i) => ({
       name: i.name,
       sku: i.sku,
@@ -113,7 +131,11 @@ export async function createShiprocketOrder(
 
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`Shiprocket order failed: ${res.status} ${text}`);
+    // Shiprocket uses this wording when the *pickup* side is incomplete, not only the customer's address.
+    const hint = /add billing\\?\/shipping address/i.test(text)
+      ? ` In Shiprocket check Settings > Pickup Addresses: an address named "${payload.pickup_location}" must exist and be verified. Set that exact name in Settings > Integrations > Pickup location.`
+      : "";
+    throw new Error(`Shiprocket order failed: ${res.status} ${text}${hint}`);
   }
 
   const data = (await res.json()) as {
