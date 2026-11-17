@@ -193,11 +193,16 @@ export async function getAllOrders() {
  * a partial failure (e.g. label generation) can be retried without
  * re-creating the Shiprocket order.
  */
-export async function fulfillOrder(orderId: string, retried = false): Promise<Awaited<ReturnType<typeof fulfillOrderOnce>>> {
-  return fulfillOrderOnce(orderId, retried);
-}
+export type FulfillResult = {
+  shiprocket: true;
+  shiprocketOrderId: string | null;
+  shipmentId: string | null;
+  awbCode: string | null;
+  labelUrl: string | null;
+  warning?: string;
+};
 
-async function fulfillOrderOnce(orderId: string, retried: boolean) {
+export async function fulfillOrder(orderId: string, retried = false): Promise<FulfillResult> {
   if (!hasDatabase) throw new Error("Database not configured");
 
   let order = await db.order.findUnique({
