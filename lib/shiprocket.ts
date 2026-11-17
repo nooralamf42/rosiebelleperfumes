@@ -156,39 +156,43 @@ export async function createShiprocketOrder(
       body: JSON.stringify(body),
     });
 
-  let res = await send(payload);
-  if (!res.ok) {
-    // After "Cancel shipping" the old Shiprocket order may still hold this order number: try again under a new reference.
-    const first = await res.clone().text();
-    if (/already|exist|duplicate/i.test(first)) {
-      res = await send({ ...payload, order_id: `${payload.order_id}-${Date.now().toString(36).slice(-4)}` });
+  type Reply = { order_id?: number; shipment_id?: number; status?: string; message?: string };
+  const attempt = async (body: typeof payload): Promise<{ ok: boolean; status: number; raw: string; data: Reply | null }> => {
+    const res = await send(body);
+    const raw = await res.text();
+    let data: Reply | null = null;
+    try {
+      data = JSON.parse(raw);
+    } catch {
+      data = null;
     }
-  }
+    return { ok: res.ok, status: res.status, raw, data };
+  };
+  const fresh = () => ({ ...payload, order_id: `${payload.order_id}-${Date.now().toString(36).slice(-4)}` });
 
-  if (!res.ok) {
-    const text = await res.text();
+  let r = await attempt(payload);
+  // A cancelled Shiprocket order keeps its order number: Shiprocket either refuses a new one under it, or
+  // hands the cancelled order back. Either way, create a new one under a fresh reference.
+  const cancelledBack = r.ok && /cancel/i.test(String(r.data?.status ?? ""));
+  if (cancelledBack || (!r.ok && /already|exist|duplicate/i.test(r.raw))) r = await attempt(fresh());
+
+  if (!r.ok) {
     // Shiprocket uses this wording when the *pickup* side is incomplete, not only the customer's address.
-    const hint = /add billing\\?\/shipping address/i.test(text)
+    const hint = /add billing\?\/shipping address/i.test(r.raw)
       ? ` In Shiprocket check Settings > Pickup Addresses: an address named "${payload.pickup_location}" must exist and be verified. Set that exact name in Settings > Integrations > Pickup location.`
       : "";
-    throw new Error(`Shiprocket order failed: ${res.status} ${text}${hint}`);
+    throw new Error(`Shiprocket order failed: ${r.status} ${r.raw}${hint}`);
   }
-
-  const raw = await res.text();
-  let data: { order_id?: number; shipment_id?: number; status?: string; message?: string };
-  try {
-    data = JSON.parse(raw);
-  } catch {
-    throw new Error(`Shiprocket returned an unreadable reply: ${raw.slice(0, 200)}`);
-  }
+  if (!r.data) throw new Error(`Shiprocket returned an unreadable reply: ${r.raw.slice(0, 200)}`);
+  const data = r.data;
   // Shiprocket can answer 200 with an error message and no order; never treat that as success.
-  if (!data.order_id || !data.shipment_id) {
-    throw new Error(`Shiprocket did not create the order: ${raw.slice(0, 300)}`);
+  if (!data.order_id || !data.shipment_id || /cancel/i.test(String(data.status ?? ""))) {
+    throw new Error(`Shiprocket did not create the order: ${r.raw.slice(0, 300)}`);
   }
 
   return {
-    shiprocketOrderId: data.order_id ? String(data.order_id) : undefined,
-    shipmentId: data.shipment_id ? String(data.shipment_id) : undefined,
+    shiprocketOrderId: String(data.order_id),
+    shipmentId: String(data.shipment_id),
     status: data.status,
   };
 }
