@@ -103,10 +103,11 @@ export async function sendOrderEmail(
   const siteUrl = siteBaseUrl(settings);
   // Product photos for the email: an uploaded picture, else the bottle in the perfume's colour.
   const items = order.items.map((i) => {
-    const size = bottleSizeOf(i.size);
+    // A product sold without size options still gets a bottle picture (the 12 gm one).
+    const size = bottleSizeOf(i.size) ?? "12";
     const image = i.image?.startsWith("https://")
       ? i.image
-      : size && i.product
+      : i.product
         ? `${siteUrl}/email-bottles/${bottleAccent(i.product.accentColor)}/${size}.png`
         : null;
     return { ...i, image };
