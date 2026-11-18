@@ -4,7 +4,7 @@ import { render } from "@react-email/components";
 import { db, hasDatabase } from "@/lib/db";
 import { getSettings, siteBaseUrl } from "@/lib/settings";
 import { orderLinkToken } from "@/lib/order-access";
-import { bottleAccent } from "@/lib/perfume-colors";
+import { emailBottleUrl } from "@/lib/perfume-colors";
 import { bottleSizeOf } from "@/lib/sizes";
 import { sendingDomain, senderLocalPart } from "./sender";
 import { getIntegrations } from "@/lib/integrations";
@@ -108,7 +108,7 @@ export async function sendOrderEmail(
     const image = i.image?.startsWith("https://")
       ? i.image
       : i.product
-        ? `${siteUrl}/email-bottles/${bottleAccent(i.product.accentColor)}/${size}.png`
+        ? emailBottleUrl(siteUrl, i.product.accentColor, size)
         : null;
     return { ...i, image };
   });

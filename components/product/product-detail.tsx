@@ -11,6 +11,7 @@ import { BottleStage } from "./bottle-stage";
 
 import { AddToCartButton } from "./add-to-cart-button";
 import { BuyNowButton } from "./buy-now-button";
+import { accentCss } from "@/lib/perfume-colors";
 import { ReviewForm } from "./review-form";
 import { formatPrice, discountPercent } from "@/lib/format";
 import { noteChips, scentProfile } from "@/lib/scent";
@@ -376,7 +377,7 @@ export function ProductDetail({
                   <span
                     key={c}
                     className="rounded-full border border-foreground/10 px-3.5 py-1.5 text-xs capitalize"
-                    style={{ background: `color-mix(in oklab, var(--${product.accentColor}) 12%, transparent)` }}
+                    style={{ background: `color-mix(in oklab, ${accentCss(product.accentColor)} 12%, transparent)` }}
                   >
                     {c}
                   </span>
@@ -395,7 +396,7 @@ export function ProductDetail({
                     animate={{ height: `${Math.max(8, a.value * 100)}%` }}
                     transition={{ duration: 0.9, delay: 0.3 + i * 0.06, ease }}
                     className="w-full rounded-t-md"
-                    style={{ background: `linear-gradient(to top, var(--${product.accentColor}), color-mix(in oklab, var(--${product.accentColor}) 40%, white))` }}
+                    style={{ background: `linear-gradient(to top, ${accentCss(product.accentColor)}, color-mix(in oklab, ${accentCss(product.accentColor)} 40%, white))` }}
                   />
                 </div>
                 <p className="mt-2 text-[10px] uppercase tracking-[0.16em] text-muted-foreground">{a.label}</p>

@@ -4,13 +4,14 @@ import Image from "next/image";
 import { BottlePhoto, BottleRow } from "./bottle-photo";
 import { useSiteSettings } from "@/components/providers/site-settings-provider";
 import { bottleSizesOf } from "@/lib/sizes";
+import { accentCss } from "@/lib/perfume-colors";
 import { cn } from "@/lib/utils";
 import type { StoreProduct } from "@/lib/types";
 
 /** Soft colour wash behind a bottle, tinted by the perfume's accent colour. */
 export function bottleBackdrop(accent: string): React.CSSProperties {
   return {
-    background: `radial-gradient(120% 90% at 50% 100%, color-mix(in oklab, var(--${accent}) 26%, var(--background)) 0%, color-mix(in oklab, var(--${accent}) 8%, var(--background)) 60%, var(--background) 100%)`,
+    background: `radial-gradient(120% 90% at 50% 100%, color-mix(in oklab, ${accentCss(accent)} 26%, var(--background)) 0%, color-mix(in oklab, ${accentCss(accent)} 8%, var(--background)) 60%, var(--background) 100%)`,
   };
 }
 

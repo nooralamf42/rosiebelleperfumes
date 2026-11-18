@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { accentCss } from "@/lib/perfume-colors";
 import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import { useCart, useHydrated, lineKey } from "@/store/cart";
 import { computeTotals } from "@/lib/cart-totals";
@@ -50,7 +51,7 @@ export default function CartPage() {
               <div
                 className="relative size-24 shrink-0 overflow-hidden rounded-2xl"
                 style={{
-                  backgroundColor: `color-mix(in oklab, var(--${line.accentColor}) 20%, white)`,
+                  backgroundColor: `color-mix(in oklab, ${accentCss(line.accentColor)} 20%, white)`,
                 }}
               >
                 {line.image ? (

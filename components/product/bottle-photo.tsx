@@ -1,5 +1,5 @@
 import layout from "@/lib/bottle-layout.json";
-import { bottleAccent } from "@/lib/perfume-colors";
+import { bottleImageUrl } from "@/lib/perfume-colors";
 import type { BottleSize } from "@/lib/sizes";
 import { cn } from "@/lib/utils";
 
@@ -67,7 +67,6 @@ export function BottlePhoto({
   labelVisible = true,
 }: LabelProps & { size?: BottleSize; accent: string; className?: string; style?: React.CSSProperties; priority?: boolean; labelVisible?: boolean }) {
   const s = SINGLE[size];
-  const color = bottleAccent(accent);
   return (
     <div
       className={cn("relative shrink-0", className)}
@@ -78,7 +77,7 @@ export function BottlePhoto({
       {/* Plain <img>: the files are already small webp cut-outs. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={`/bottles/${color}/${size}.webp`}
+        src={bottleImageUrl(accent, size)}
         alt=""
         width={s.w}
         height={s.h}

@@ -42,7 +42,10 @@ export const productSchema = z.object({
   price: z.number().int().nonnegative(), // paise
   compareAtPrice: z.number().int().nonnegative().optional().nullable(),
   images: z.array(z.string().url()).default([]),
-  accentColor: z.string().default("brand-berry"),
+  accentColor: z
+    .string()
+    .regex(/^(brand-[a-z]+|#[0-9a-fA-F]{6})$/, "Pick a colour")
+    .default("brand-berry"),
   flavor: z.string().optional().default(""),
   mood: z.string().optional().default(""),
   sizes: z.array(z.string()).default([]),

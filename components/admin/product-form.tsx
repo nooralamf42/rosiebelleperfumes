@@ -4,28 +4,16 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Loader2, Plus, Trash2 } from "lucide-react";
-import { liquidColor } from "@/lib/perfume-colors";
 import { formatSizeEntry } from "@/lib/sizes";
 import { saveProduct, deleteProduct } from "@/app/admin/actions";
 import { ImageUploader } from "./image-uploader";
+import { LiquidColorField } from "./liquid-color-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toPaise } from "@/lib/format";
 import type { AdminProduct } from "@/lib/admin-data";
-
-const accents = [
-  "brand-berry",
-  "brand-cherry",
-  "brand-tangerine",
-  "brand-grape",
-  "brand-mint",
-  "brand-sky",
-  "brand-lemon",
-  "brand-lavender",
-  "brand-peach",
-];
 
 type SizeRow = { label: string; price: string };
 
@@ -289,24 +277,7 @@ export function ProductForm({
       </div>
 
       <Field label="Perfume colour">
-        <div className="flex flex-wrap gap-2">
-          {accents.map((a) => (
-            <button
-              key={a}
-              type="button"
-              onClick={() => set("accentColor", a)}
-              className={`size-8 rounded-full border-2 ${
-                form.accentColor === a ? "border-foreground" : "border-transparent"
-              }`}
-              style={{ backgroundColor: liquidColor(a) }}
-              aria-label={a.replace("brand-", "")}
-              title={a.replace("brand-", "")}
-            />
-          ))}
-        </div>
-        <p className="mt-1.5 text-xs text-muted-foreground">
-          The colour of the liquid in the bottle picture, and the tint behind it.
-        </p>
+        <LiquidColorField value={form.accentColor} onChange={(accentColor) => set("accentColor", accentColor)} />
       </Field>
 
       <Field label="Sizes and prices">

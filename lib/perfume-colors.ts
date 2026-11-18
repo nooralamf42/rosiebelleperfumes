@@ -21,11 +21,39 @@ export const PERFUME_ACCENTS = Object.keys(PERFUME_COLORS);
 /** The colour used when a product's accent isn't one of the known ones. */
 export const DEFAULT_ACCENT = "brand-cherry";
 
+/*
+ * A product's accent is either one of the preset tokens above ("brand-cherry")
+ * or a custom colour picked in the admin, stored as "#rrggbb". Custom colours
+ * are painted onto the bottle photo by /api/bottle (cached after the first use).
+ */
+export const isHexAccent = (accent: string) => /^#[0-9a-fA-F]{6}$/.test(accent);
+
+/** The liquid colour as #rrggbb. */
 export function liquidColor(accent: string): string {
+  if (isHexAccent(accent)) return accent.toLowerCase();
   return (PERFUME_COLORS[accent] ?? PERFUME_COLORS[DEFAULT_ACCENT]).hex;
 }
 
-/** The accent whose photos exist, falling back to the original deep red. */
+/** For CSS: the colour itself, or the theme variable of a preset. */
+export function accentCss(accent: string): string {
+  return isHexAccent(accent) ? accent.toLowerCase() : `var(--${accent})`;
+}
+
+/** The preset whose photos exist, falling back to the original deep red. */
 export function bottleAccent(accent: string): string {
   return accent in PERFUME_COLORS ? accent : DEFAULT_ACCENT;
+}
+
+/** Bottle photo for an accent and size (12, 6, 3): a prebuilt file, or the recolouring route for a custom colour. */
+export function bottleImageUrl(accent: string, size: string): string {
+  return isHexAccent(accent)
+    ? `/api/bottle/${size}/${accent.slice(1).toLowerCase()}.webp`
+    : `/bottles/${bottleAccent(accent)}/${size}.webp`;
+}
+
+/** Small square PNG of the bottle for order emails (mail apps can't show WebP). */
+export function emailBottleUrl(origin: string, accent: string, size: string): string {
+  return isHexAccent(accent)
+    ? `${origin}/api/bottle/${size}/${accent.slice(1).toLowerCase()}.png?e=1`
+    : `${origin}/email-bottles/${bottleAccent(accent)}/${size}.png`;
 }
