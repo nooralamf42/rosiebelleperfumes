@@ -5,6 +5,8 @@ import { db, hasDatabase } from "@/lib/db";
 import { CACHE_TAGS } from "@/lib/cache-tags";
 import { assertAdmin } from "@/lib/admin-guard";
 import { productSchema, type ProductInput } from "@/lib/validators";
+import { deleteProductImages } from "@/lib/cloudinary-delete";
+import { allProductImages, parseSizeImages } from "@/lib/product-images";
 import { cancelShipping, fulfillOrder, markOrderDelivered, markOrderShipped, type ManualShipInput } from "@/lib/orders";
 import { refundOrder, RefundError } from "@/lib/refunds";
 import { isEmailEnabled, sendOrderEmail, type OrderEmailKind } from "@/lib/email";
@@ -51,6 +53,10 @@ export async function saveProduct(
       price: d.price,
       compareAtPrice: d.compareAtPrice ?? null,
       images: d.images,
+      // Only pictures for sizes the product still has.
+      sizeImages: Object.fromEntries(
+        Object.entries(d.sizeImages).filter(([label, list]) => list.length > 0 && d.sizes.some((s) => s.split("=")[0].trim() === label)),
+      ),
       accentColor: d.accentColor,
       flavor: d.flavor || null,
       mood: d.mood || null,
@@ -64,12 +70,19 @@ export async function saveProduct(
     };
 
     let id = input.id;
+    let before: string[] = [];
     if (id) {
+      const old = await db.product.findUnique({ where: { id }, select: { images: true, sizeImages: true } });
+      before = old ? allProductImages({ images: old.images, sizeImages: parseSizeImages(old.sizeImages) }) : [];
       await db.product.update({ where: { id }, data });
     } else {
       const created = await db.product.create({ data });
       id = created.id;
     }
+
+    // A picture that was replaced or removed is deleted from Cloudinary now that the new set is saved.
+    const kept = new Set(allProductImages({ images: data.images, sizeImages: data.sizeImages as Record<string, string[]> }));
+    await deleteProductImages(before.filter((url) => !kept.has(url)));
 
     // Expire cached catalog data (incl. the old slug if it changed), then the
     // pages; "layout" also refreshes nav categories rendered by the root layout.
@@ -86,13 +99,31 @@ export async function deleteProduct(id: string): Promise<ActionResult> {
   try {
     await assertAdmin();
     if (!hasDatabase) return { ok: false, error: "Database not configured" };
+    const old = await db.product.findUnique({ where: { id }, select: { images: true, sizeImages: true } });
     await db.product.delete({ where: { id } });
+    if (old) await deleteProductImages(allProductImages({ images: old.images, sizeImages: parseSizeImages(old.sizeImages) }));
     updateTag(CACHE_TAGS.catalog);
     revalidatePath("/admin/products");
     revalidatePath("/", "layout");
     return { ok: true };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Failed to delete" };
+  }
+}
+
+/**
+ * Delete a picture that was uploaded in the editor but never saved (replaced or
+ * removed again before pressing Save). Saved pictures are cleaned up when the
+ * product is saved instead.
+ */
+export async function discardUploadedImageAction(url: string): Promise<ActionResult> {
+  try {
+    await assertAdmin();
+    const inUse = hasDatabase ? await db.product.count({ where: { images: { has: url } } }) : 0;
+    if (inUse === 0) await deleteProductImages([url]);
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Couldn't delete the picture" };
   }
 }
 

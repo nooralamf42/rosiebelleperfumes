@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import { formatSizeEntry } from "@/lib/sizes";
 import { saveProduct, deleteProduct } from "@/app/admin/actions";
-import { ImageUploader } from "./image-uploader";
+import { ProductGalleryEditor } from "./product-gallery-editor";
 import { LiquidColorField } from "./liquid-color-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -100,6 +100,7 @@ export function ProductForm({
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [images, setImages] = useState<string[]>(product?.images ?? []);
+  const [sizeImages, setSizeImages] = useState<Record<string, string[]>>(product?.sizeImages ?? {});
   const [sizeRows, setSizeRows] = useState<SizeRow[]>(() => (product?.sizes ?? []).map(rowFromEntry));
   const [form, setForm] = useState({
     name: product?.name ?? "",
@@ -138,6 +139,7 @@ export function ProductForm({
       price: toPaise(Number(form.price) || 0),
       compareAtPrice: form.compareAtPrice ? toPaise(Number(form.compareAtPrice)) : null,
       images,
+      sizeImages,
       accentColor: form.accentColor,
       flavor: form.flavor,
       mood: form.mood,
@@ -175,11 +177,14 @@ export function ProductForm({
 
   return (
     <form onSubmit={onSubmit} className="max-w-2xl space-y-6">
-      <Field label="Images">
-        <ImageUploader value={images} onChange={setImages} />
-        <p className="mt-1.5 text-xs text-muted-foreground">
-          Leave empty to use the branded illustration fallback.
-        </p>
+      <Field label="Pictures">
+        <ProductGalleryEditor
+          sizes={sizeRows.map((r) => r.label.trim()).filter(Boolean)}
+          images={images}
+          sizeImages={sizeImages}
+          onImages={setImages}
+          onSizeImages={setSizeImages}
+        />
       </Field>
 
       <div className="grid gap-4 sm:grid-cols-2">

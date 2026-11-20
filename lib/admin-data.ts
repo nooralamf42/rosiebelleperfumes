@@ -1,5 +1,6 @@
 import { db, hasDatabase } from "./db";
 import { demoProducts } from "./demo-data";
+import { parseSizeImages } from "./product-images";
 
 export type AdminProduct = {
   id: string;
@@ -11,6 +12,7 @@ export type AdminProduct = {
   price: number;
   compareAtPrice: number | null;
   images: string[];
+  sizeImages: Record<string, string[]>;
   accentColor: string;
   flavor: string;
   mood: string;
@@ -55,6 +57,7 @@ function demoToAdmin(p: (typeof demoProducts)[number]): AdminProduct {
     price: p.price,
     compareAtPrice: p.compareAtPrice,
     images: p.images,
+    sizeImages: parseSizeImages((p as { sizeImages?: unknown }).sizeImages),
     accentColor: p.accentColor,
     flavor: p.flavor ?? "",
     mood: p.mood ?? "",
@@ -81,6 +84,7 @@ export async function getAdminProducts(): Promise<AdminProduct[]> {
     price: p.price,
     compareAtPrice: p.compareAtPrice,
     images: p.images,
+    sizeImages: parseSizeImages((p as { sizeImages?: unknown }).sizeImages),
     accentColor: p.accentColor,
     flavor: p.flavor ?? "",
     mood: p.mood ?? "",
@@ -111,6 +115,7 @@ export async function getAdminProductById(id: string): Promise<AdminProduct | nu
     price: p.price,
     compareAtPrice: p.compareAtPrice,
     images: p.images,
+    sizeImages: parseSizeImages((p as { sizeImages?: unknown }).sizeImages),
     accentColor: p.accentColor,
     flavor: p.flavor ?? "",
     mood: p.mood ?? "",

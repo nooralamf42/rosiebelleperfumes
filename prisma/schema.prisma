@@ -65,6 +65,7 @@ model Product {
   price          Int // in paise (INR * 100)
   compareAtPrice Int? // strike-through price, in paise
   images         String[] // Cloudinary (or other) URLs
+  sizeImages     Json? // { "12 gm": [url, ...] }: pictures that belong to one size (up to 4 each)
   accentColor    String      @default("brand-berry") // token used for card theming
   flavor         String?
   mood           String? // for gummies: Social Spark, Sweet Dreams...

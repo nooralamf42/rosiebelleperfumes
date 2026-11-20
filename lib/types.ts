@@ -10,6 +10,8 @@ export type StoreProduct = {
   price: number; // paise
   compareAtPrice: number | null;
   images: string[];
+  /** Pictures of one size only, keyed by the size label (see lib/product-images.ts). */
+  sizeImages?: Record<string, string[]>;
   accentColor: string; // brand token, e.g. "brand-berry"
   flavor: string | null;
   mood: string | null;

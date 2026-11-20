@@ -41,7 +41,8 @@ export const productSchema = z.object({
   type: z.enum(["DRINK", "GUMMY", "BUNDLE"]),
   price: z.number().int().nonnegative(), // paise
   compareAtPrice: z.number().int().nonnegative().optional().nullable(),
-  images: z.array(z.string().url()).default([]),
+  images: z.array(z.string().url()).max(4, "Up to 4 pictures").default([]),
+  sizeImages: z.record(z.string(), z.array(z.string().url()).max(4, "Up to 4 pictures per size")).default({}),
   accentColor: z
     .string()
     .regex(/^(brand-[a-z]+|#[0-9a-fA-F]{6})$/, "Pick a colour")

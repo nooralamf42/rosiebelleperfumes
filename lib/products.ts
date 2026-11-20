@@ -3,6 +3,7 @@ import { db, hasDatabase } from "./db";
 import { demoProducts, demoReviews } from "./demo-data";
 import { demoCategoryOf } from "./demo-data";
 import { CACHE_TAGS } from "./cache-tags";
+import { parseSizeImages } from "./product-images";
 import type { ProductType, StoreProduct, ReviewView } from "./types";
 
 type DbProduct = Awaited<ReturnType<typeof db.product.findFirst>>;
@@ -18,6 +19,7 @@ function toStoreProduct(p: NonNullable<DbProduct> & { category?: { slug: string 
     price: p.price,
     compareAtPrice: p.compareAtPrice ?? null,
     images: p.images,
+    sizeImages: parseSizeImages(p.sizeImages),
     accentColor: p.accentColor,
     flavor: p.flavor,
     mood: p.mood,

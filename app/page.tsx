@@ -1,4 +1,5 @@
 import { Hero } from "@/components/home/hero";
+import { primaryImage } from "@/lib/product-images";
 import { Marquee } from "@/components/home/marquee";
 import { CategoryGrid } from "@/components/home/category-grid";
 import { ProductShowcase } from "@/components/home/product-showcase";
@@ -26,7 +27,7 @@ export default async function HomePage() {
 
   // Fall back to newest products if nothing is flagged featured.
   const showcase = (featured.length > 0 ? featured : all).slice(0, 8);
-  const heroProducts = all.filter((p) => p.images[0]).slice(0, 3);
+  const heroProducts = all.filter((p) => primaryImage(p)).slice(0, 3);
 
   return (
     <>

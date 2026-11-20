@@ -1,6 +1,7 @@
 "use client";
 
 import { toast } from "sonner";
+import { primaryImage } from "@/lib/product-images";
 import { useCart } from "@/store/cart";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,7 +28,7 @@ export function QuickAddSize({ product }: { product: StoreProduct }) {
       slug: product.slug,
       name: product.name,
       price,
-      image: product.images[0] ?? null,
+      image: primaryImage(product, size),
       accentColor: product.accentColor,
       size,
     });

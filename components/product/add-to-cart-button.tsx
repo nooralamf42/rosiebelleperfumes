@@ -5,6 +5,7 @@ import { useCart } from "@/store/cart";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { priceForSize } from "@/lib/sizes";
+import { primaryImage } from "@/lib/product-images";
 import type { StoreProduct } from "@/lib/types";
 import type { ComponentProps, ReactNode } from "react";
 
@@ -36,7 +37,7 @@ export function useAddLine({
         slug: product.slug,
         name: product.name,
         price: unitPrice ?? priceForSize(product, selectedSize),
-        image: product.images[0] ?? null,
+        image: primaryImage(product, selectedSize),
         accentColor: product.accentColor,
         size: selectedSize,
       },

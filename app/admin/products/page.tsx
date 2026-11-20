@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { primaryImage } from "@/lib/product-images";
 import { Plus } from "lucide-react";
 import { getAdminProducts } from "@/lib/admin-data";
 import { formatPrice } from "@/lib/format";
@@ -50,7 +51,7 @@ export default async function AdminProductsPage() {
         {products.map((p) => (
           <li key={p.id}>
             <Link href={`/admin/products/${p.id}/edit`} className="flex items-center gap-3 p-3 active:bg-muted/60">
-              <Thumb src={p.images[0]} />
+              <Thumb src={primaryImage(p) ?? undefined} />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold">{p.name}</p>
                 <p className="text-xs text-muted-foreground">
@@ -79,7 +80,7 @@ export default async function AdminProductsPage() {
               <tr key={p.id} className="hover:bg-muted/40">
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
-                    <Thumb src={p.images[0]} />
+                    <Thumb src={primaryImage(p) ?? undefined} />
                     <span className="font-semibold">{p.name}</span>
                   </div>
                 </td>

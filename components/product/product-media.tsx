@@ -5,6 +5,7 @@ import { BottlePhoto, BottleRow } from "./bottle-photo";
 import { useSiteSettings } from "@/components/providers/site-settings-provider";
 import { bottleSizesOf } from "@/lib/sizes";
 import { accentCss } from "@/lib/perfume-colors";
+import { primaryImage } from "@/lib/product-images";
 import { cn } from "@/lib/utils";
 import type { StoreProduct } from "@/lib/types";
 
@@ -32,7 +33,7 @@ export function ProductMedia({
   className?: string;
 }) {
   const { identity } = useSiteSettings();
-  const img = product.images?.[0];
+  const img = primaryImage(product);
   if (img) {
     return (
       <Image

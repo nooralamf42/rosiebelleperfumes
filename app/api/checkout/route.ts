@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { primaryImage } from "@/lib/product-images";
 import { checkoutSchema } from "@/lib/validators";
 import { getProductsByIds } from "@/lib/products";
 import { computeTotals } from "@/lib/cart-totals";
@@ -48,7 +49,7 @@ export async function POST(req: Request) {
         name: p.name,
         // Per-size price from the catalog, never from the browser.
         price: priceForSize(p, i.size),
-        image: p.images[0] ?? null,
+        image: primaryImage(p, i.size),
         quantity: i.quantity,
         size: i.size ?? null,
       };

@@ -12,6 +12,7 @@ import { BottleStage } from "./bottle-stage";
 import { AddToCartButton } from "./add-to-cart-button";
 import { BuyNowButton } from "./buy-now-button";
 import { accentCss } from "@/lib/perfume-colors";
+import { imagesForSize } from "@/lib/product-images";
 import { ReviewForm } from "./review-form";
 import { formatPrice, discountPercent } from "@/lib/format";
 import { noteChips, scentProfile } from "@/lib/scent";
@@ -90,7 +91,8 @@ export function ProductDetail({
   const sizeList = productSizes(product);
   // The first size is the default, so the price and bottle are always for a real choice.
   const [selectedSize, setSelectedSize] = useState<string | null>(sizeList[0]?.label ?? null);
-  const images = product.images ?? [];
+  // Pictures of the chosen size, else the general set; the first is the primary one.
+  const images = imagesForSize(product, selectedSize);
   const { commerce, identity } = useSiteSettings();
   const unitPrice = priceForSize(product, selectedSize);
   const unitCompare = compareAtForPrice(product, unitPrice);
@@ -232,7 +234,12 @@ export function ProductDetail({
                   <li key={b}>
                     <button
                       type="button"
-                      onClick={() => entry && setSelectedSize(entry.label)}
+                      onClick={() => {
+                        if (entry) {
+                          setSelectedSize(entry.label);
+                          setActive(0);
+                        }
+                      }}
                       aria-label={`Show the ${b} gm bottle`}
                       aria-pressed={on}
                       className={`relative flex aspect-[4/3] w-full items-end justify-center overflow-hidden rounded-2xl px-3 pb-2 transition-all lg:aspect-square ${
@@ -319,7 +326,10 @@ export function ProductDetail({
                       type="button"
                       role="radio"
                       aria-checked={on}
-                      onClick={() => setSelectedSize(s.label)}
+                      onClick={() => {
+                          setSelectedSize(s.label);
+                          setActive(0);
+                        }}
                       className={
                         "rounded-2xl border px-2 py-2.5 text-center transition-all md:py-3 " +
                         (on ? "border-primary bg-primary text-primary-foreground shadow-soft" : "border-foreground/15 hover:border-foreground")

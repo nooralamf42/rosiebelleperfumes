@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { primaryImage } from "@/lib/product-images";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { motion, useScroll, useTransform } from "motion/react";
@@ -41,9 +42,9 @@ export function Hero({
   const yCopy = useTransform(scrollYProgress, [0, 1], [0, -60]);
   const fade = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
 
-  const feature = products.find((p) => p.images[0]);
+  const feature = products.find((p) => primaryImage(p));
   const video = content.videoUrl?.startsWith("https://") ? optimizedVideoUrl(content.videoUrl) : "";
-  const still = feature?.images[0] ?? HERO_STILL;
+  const still = (feature && primaryImage(feature)) || HERO_STILL;
 
   return (
     <section ref={ref} className="relative isolate overflow-hidden">
